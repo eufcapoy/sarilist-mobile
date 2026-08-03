@@ -1,50 +1,60 @@
-# Welcome to your Expo app 👋
+# SariList Mobile
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+SariList is a cross-platform Expo app for turning store-restocking notes into an organized shopping trip. This repository contains the mobile app only.
 
-## Get started
+## Technology
 
-1. Install dependencies
+- React Native and Expo SDK 54
+- TypeScript
+- Expo Router
+- Expo Go compatible
+- Mock and in-memory data during the initial UI phase
 
-   ```bash
-   npm install
-   ```
+## Project structure
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```text
+app/
+  _layout.tsx          Root providers and navigation theme
+  (app)/               Main application route group
+    _layout.tsx        Screen stack
+    index.tsx          Home
+    lists.tsx          Session list history
+    new-list.tsx       Manual list creation
+    review-scan.tsx    Scan review and correction
+    shopping.tsx       In-store shopping mode
+    summary.tsx        Trip summary
+components/
+  navigation/          Shared navigation UI
+  scan/                Scan-state and review UI
+  shopping/            Shopping and quantity controls
+  ui/                  Reusable design-system components
+constants/             Design tokens and unit catalog
+data/                  Mock data
+state/                 Shared in-memory list and session-history state
+types/                 Domain types
+assets/                App icons and splash assets
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Review Scan accepts camera and gallery photos, while recognition results remain mocked. It exposes empty, loading, error, and success previews. OCR, persistence, and backend services are intentionally deferred.
 
-## Learn more
+## Product roadmap
 
-To learn more about developing your project with Expo, look at the following resources:
+1. List management: rename, duplicate, and delete with themed confirmation. — Complete
+2. Onboarding and tutorial using the cat companion.
+3. Accessibility and cross-screen responsive QA.
+4. Permanent storage.
+5. Actual OCR integration.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Run locally
 
-## Join the community
+```powershell
+npm install
+npx expo start --clear
+```
 
-Join our community of developers creating universal apps.
+Scan the QR code with Expo Go. Type checking and linting can be run with:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```powershell
+npx tsc --noEmit
+npm run lint
+```

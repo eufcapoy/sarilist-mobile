@@ -1,62 +1,29 @@
 import Feather from '@expo/vector-icons/Feather';
-import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BrandMark } from '@/components/brand-mark';
+import { FloatingActionDock } from '@/components/navigation/floating-action-dock';
+import { ListHistoryRow } from '@/components/shopping/list-history-row';
+import { AppDialog } from '@/components/ui/app-dialog';
 import { AppText } from '@/components/ui/app-text';
 import { AppButton } from '@/components/ui/button';
 import { Surface } from '@/components/ui/surface';
 import { Colors, Radii, Shadows, Spacing } from '@/constants/theme';
-import { recentLists, type ShoppingListPreview } from '@/data/mock-lists';
-
-const categoryIcons: Record<ShoppingListPreview['category'], keyof typeof Feather.glyphMap> = {
-  market: 'shopping-bag',
-  home: 'home',
-  occasion: 'coffee',
-};
-
-function showUpcomingScreen(screenName: string) {
-  Alert.alert(`${screenName} is coming next`, 'The Home experience is ready. This flow will be connected in the next build step.');
-}
-
-function RecentListRow({ list }: { list: ShoppingListPreview }) {
-  const isComplete = list.completedCount === list.itemCount;
-  const progress = `${list.completedCount}/${list.itemCount}`;
-
-  return (
-    <Pressable
-      accessibilityHint="Opens this shopping list"
-      accessibilityRole="button"
-      onPress={() => showUpcomingScreen('Shopping Mode')}
-      style={({ pressed }) => [styles.listRow, pressed && styles.rowPressed]}>
-      <View style={[styles.listIcon, isComplete && styles.listIconComplete]}>
-        <Feather
-          color={isComplete ? Colors.forest : Colors.leaf}
-          name={isComplete ? 'check' : categoryIcons[list.category]}
-          size={20}
-        />
-      </View>
-
-      <View style={styles.listCopy}>
-        <AppText numberOfLines={1} variant="bodyMedium">
-          {list.title}
-        </AppText>
-        <AppText numberOfLines={1} tone="muted" variant="caption">
-          {list.detail}
-        </AppText>
-      </View>
-
-      <View style={styles.listMeta}>
-        <AppText tone={isComplete ? 'accent' : 'muted'} variant="label">
-          {isComplete ? 'Done' : progress}
-        </AppText>
-        <Feather color={Colors.textSubtle} name="chevron-right" size={18} />
-      </View>
-    </Pressable>
-  );
-}
+import { useShoppingList } from '@/state/shopping-list-context';
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const { openList, savedLists } = useShoppingList();
+  const [upcomingScreen, setUpcomingScreen] = useState<string>();
+
+  function openSavedList(id: string) {
+    const list = openList(id);
+    if (list) router.push(list.finishedAt ? '/summary' : '/shopping');
+  }
+
   return (
     <SafeAreaView edges={['top']} style={styles.safeArea}>
       <ScrollView
@@ -72,7 +39,7 @@ export default function HomeScreen() {
           <Pressable
             accessibilityLabel="Open profile"
             accessibilityRole="button"
-            onPress={() => showUpcomingScreen('Profile')}
+            onPress={() => setUpcomingScreen('Profile')}
             style={({ pressed }) => [styles.avatar, pressed && styles.rowPressed]}>
             <AppText tone="accent" variant="label">
               EM
@@ -103,10 +70,9 @@ export default function HomeScreen() {
             Add what you need now. Grouping and shopping mode will keep the trip moving later.
           </AppText>
           <AppButton
-            fullWidth
             icon="plus"
             label="Create new list"
-            onPress={() => showUpcomingScreen('New List')}
+            onPress={() => router.push('/new-list')}
             style={styles.heroButton}
             variant="secondary"
           />
@@ -115,7 +81,7 @@ export default function HomeScreen() {
         <View style={styles.quickActions}>
           <Pressable
             accessibilityRole="button"
-            onPress={() => showUpcomingScreen('Review Scan')}
+            onPress={() => router.push('/review-scan')}
             style={({ pressed }) => [styles.quickAction, pressed && styles.rowPressed]}>
             <View style={styles.quickActionIcon}>
               <Feather color={Colors.forest} name="camera" size={21} />
@@ -123,11 +89,6 @@ export default function HomeScreen() {
             <View style={styles.quickActionCopy}>
               <View style={styles.quickActionTitleRow}>
                 <AppText variant="bodyMedium">Review a scan</AppText>
-                <View style={styles.soonBadge}>
-                  <AppText tone="accent" variant="overline">
-                    Soon
-                  </AppText>
-                </View>
               </View>
               <AppText tone="muted" variant="caption">
                 Turn a photo into a tidy list
@@ -147,7 +108,7 @@ export default function HomeScreen() {
           <Pressable
             accessibilityRole="button"
             hitSlop={10}
-            onPress={() => showUpcomingScreen('All Lists')}>
+            onPress={() => router.push('/lists')}>
             <AppText tone="accent" variant="label">
               See all
             </AppText>
@@ -155,11 +116,13 @@ export default function HomeScreen() {
         </View>
 
         <Surface style={styles.listSurface}>
-          {recentLists.slice(0, 2).map((list, index) => (
-            <View key={list.id}>
-              <RecentListRow list={list} />
-              {index === 0 ? <View style={styles.divider} /> : null}
-            </View>
+          {savedLists.slice(0, 2).map((list, index, visibleLists) => (
+            <ListHistoryRow
+              key={list.id}
+              list={list}
+              onPress={() => openSavedList(list.id)}
+              showDivider={index < visibleLists.length - 1}
+            />
           ))}
         </Surface>
 
@@ -170,6 +133,20 @@ export default function HomeScreen() {
           </AppText>
         </View>
       </ScrollView>
+      <FloatingActionDock
+        onCreatePress={() => router.push('/new-list')}
+        onHomePress={() => undefined}
+        onScanPress={() => router.push('/review-scan')}
+      />
+      <AppDialog
+        mascotExpression="empty"
+        message="This part of SariList is planned for a later build. Your current shopping flow is ready to use."
+        onClose={() => setUpcomingScreen(undefined)}
+        onPrimary={() => setUpcomingScreen(undefined)}
+        primaryLabel="Got it"
+        title={`${upcomingScreen ?? 'Feature'} is coming soon`}
+        visible={Boolean(upcomingScreen)}
+      />
     </SafeAreaView>
   );
 }
@@ -184,8 +161,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    paddingBottom: Spacing[12],
-    paddingHorizontal: Spacing[6],
+    alignSelf: 'center',
+    maxWidth: 520,
+    paddingBottom: 148,
+    paddingHorizontal: Spacing[5],
+    width: '100%',
   },
   header: {
     alignItems: 'center',
@@ -207,8 +187,9 @@ const styles = StyleSheet.create({
     width: 44,
   },
   intro: {
-    marginBottom: Spacing[8],
-    marginTop: Spacing[10],
+    marginBottom: Spacing[6],
+    marginTop: Spacing[8],
+    maxWidth: 380,
   },
   introBody: {
     marginTop: Spacing[3],
@@ -218,7 +199,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.forest,
     borderColor: Colors.forest,
     overflow: 'hidden',
-    padding: Spacing[6],
+    padding: Spacing[5],
   },
   heroDecorationLarge: {
     backgroundColor: 'rgba(243, 232, 210, 0.08)',
@@ -242,21 +223,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.cream,
     borderRadius: Radii.md,
-    height: 42,
+    height: 40,
     justifyContent: 'center',
-    marginBottom: Spacing[6],
-    width: 42,
+    marginBottom: Spacing[4],
+    width: 40,
   },
   heroTitle: {
     maxWidth: 260,
   },
   heroBody: {
-    marginBottom: Spacing[6],
-    marginTop: Spacing[3],
+    marginBottom: Spacing[5],
+    marginTop: Spacing[2],
     maxWidth: 300,
     opacity: 0.78,
   },
   heroButton: {
+    alignSelf: 'flex-start',
     backgroundColor: Colors.cream,
     borderColor: Colors.cream,
   },
@@ -270,17 +252,17 @@ const styles = StyleSheet.create({
     borderRadius: Radii.lg,
     borderWidth: 1,
     flexDirection: 'row',
-    padding: Spacing[4],
+    padding: Spacing[3],
     ...Shadows.soft,
   },
   quickActionIcon: {
     alignItems: 'center',
     backgroundColor: Colors.creamLight,
     borderRadius: Radii.md,
-    height: 44,
+    height: 40,
     justifyContent: 'center',
     marginRight: Spacing[3],
-    width: 44,
+    width: 40,
   },
   quickActionCopy: {
     flex: 1,
@@ -290,53 +272,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Spacing[2],
   },
-  soonBadge: {
-    backgroundColor: Colors.forestSoft,
-    borderRadius: Radii.pill,
-    paddingHorizontal: Spacing[2],
-    paddingVertical: 2,
-  },
   sectionHeader: {
     alignItems: 'flex-end',
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: Spacing[4],
-    marginTop: Spacing[10],
+    marginTop: Spacing[8],
   },
   listSurface: {
     overflow: 'hidden',
-  },
-  listRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    minHeight: 82,
-    paddingHorizontal: Spacing[4],
-  },
-  listIcon: {
-    alignItems: 'center',
-    backgroundColor: Colors.creamLight,
-    borderRadius: Radii.md,
-    height: 44,
-    justifyContent: 'center',
-    marginRight: Spacing[3],
-    width: 44,
-  },
-  listIconComplete: {
-    backgroundColor: Colors.forestSoft,
-  },
-  listCopy: {
-    flex: 1,
-  },
-  listMeta: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: Spacing[1],
-    marginLeft: Spacing[2],
-  },
-  divider: {
-    backgroundColor: Colors.border,
-    height: StyleSheet.hairlineWidth,
-    marginLeft: 76,
   },
   rowPressed: {
     opacity: 0.68,

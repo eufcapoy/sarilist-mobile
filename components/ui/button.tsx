@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, View, type PressableProps } from 'react-native';
 import { Colors, Radii, Spacing } from '@/constants/theme';
 import { AppText } from './app-text';
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
 type AppButtonProps = Omit<PressableProps, 'children'> & {
   label: string;
@@ -24,8 +24,8 @@ export function AppButton({
   style,
   ...props
 }: AppButtonProps) {
-  const isPrimary = variant === 'primary';
-  const foreground = isPrimary ? Colors.white : Colors.forest;
+  const isEmphasized = variant === 'primary' || variant === 'danger';
+  const foreground = isEmphasized ? Colors.white : Colors.forest;
 
   return (
     <Pressable
@@ -50,7 +50,12 @@ export function AppButton({
       {...props}>
       <View style={styles.content}>
         {icon ? <Feather color={foreground} name={icon} size={19} /> : null}
-        <AppText variant="bodyMedium" style={{ color: foreground }}>
+        <AppText
+          adjustsFontSizeToFit
+          minimumFontScale={0.88}
+          numberOfLines={1}
+          variant="bodyMedium"
+          style={{ color: foreground }}>
           {label}
         </AppText>
       </View>
@@ -60,11 +65,11 @@ export function AppButton({
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: 54,
+    minHeight: 50,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: Radii.md,
-    paddingHorizontal: Spacing[5],
+    paddingHorizontal: Spacing[4],
   },
   primary: {
     backgroundColor: Colors.forest,
@@ -76,6 +81,9 @@ const styles = StyleSheet.create({
   },
   ghost: {
     backgroundColor: Colors.transparent,
+  },
+  danger: {
+    backgroundColor: Colors.danger,
   },
   content: {
     alignItems: 'center',

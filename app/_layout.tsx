@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { Colors } from '@/constants/theme';
+import { ShoppingListProvider } from '@/state/shopping-list-context';
 
 const navigationTheme = {
   ...DefaultTheme,
@@ -19,16 +20,18 @@ const navigationTheme = {
 };
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  anchor: '(app)',
 };
 
 export default function RootLayout() {
   return (
-    <ThemeProvider value={navigationTheme}>
-      <Stack screenOptions={{ contentStyle: { backgroundColor: Colors.canvas } }}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      </Stack>
-      <StatusBar style="dark" />
-    </ThemeProvider>
+    <ShoppingListProvider>
+      <ThemeProvider value={navigationTheme}>
+        <Stack screenOptions={{ contentStyle: { backgroundColor: Colors.canvas } }}>
+          <Stack.Screen name="(app)" options={{ headerShown: false }} />
+        </Stack>
+        <StatusBar style="dark" />
+      </ThemeProvider>
+    </ShoppingListProvider>
   );
 }

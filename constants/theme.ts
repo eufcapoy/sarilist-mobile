@@ -59,14 +59,14 @@ export const Radii = {
 
 export const Typography = {
   display: {
-    fontSize: 40,
-    lineHeight: 45,
+    fontSize: 36,
+    lineHeight: 41,
     fontWeight: '700',
-    letterSpacing: -1.4,
+    letterSpacing: -1.1,
   },
   title: {
-    fontSize: 28,
-    lineHeight: 34,
+    fontSize: 26,
+    lineHeight: 32,
     fontWeight: '700',
     letterSpacing: -0.7,
   },
