@@ -25,7 +25,7 @@ export function AppDialog({
   message,
   primaryLabel,
   secondaryLabel,
-  primaryIcon = 'arrow-right',
+  primaryIcon,
   primaryVariant = 'primary',
   mascotExpression = 'empty',
   onPrimary,
@@ -40,7 +40,7 @@ export function AppDialog({
       visible={visible}>
       <View style={styles.root}>
         <Pressable
-          accessibilityLabel="Close dialog"
+          accessible={false}
           onPress={onClose}
           style={styles.backdrop}
         />

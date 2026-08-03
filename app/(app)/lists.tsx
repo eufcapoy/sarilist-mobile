@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ListHistoryRow } from '@/components/shopping/list-history-row';
+import { WalkthroughTarget } from '@/components/onboarding/walkthrough-target';
 import { ListActionsSheet } from '@/components/shopping/list-actions-sheet';
 import { RenameListDialog } from '@/components/shopping/rename-list-dialog';
 import { AppDialog } from '@/components/ui/app-dialog';
@@ -112,17 +113,19 @@ export default function ListsScreen() {
           </View>
 
           {visibleLists.length ? (
-            <Surface style={styles.listSurface}>
-              {visibleLists.map((list, index) => (
-                <ListHistoryRow
-                  key={list.id}
-                  list={list}
-                  onMorePress={() => showActions(list.id)}
-                  onPress={() => openSavedList(list.id)}
-                  showDivider={index < visibleLists.length - 1}
-                />
-              ))}
-            </Surface>
+            <WalkthroughTarget id="lists-history">
+              <Surface style={styles.listSurface}>
+                {visibleLists.map((list, index) => (
+                  <ListHistoryRow
+                    key={list.id}
+                    list={list}
+                    onMorePress={() => showActions(list.id)}
+                    onPress={() => openSavedList(list.id)}
+                    showDivider={index < visibleLists.length - 1}
+                  />
+                ))}
+              </Surface>
+            </WalkthroughTarget>
           ) : (
             <Surface style={styles.emptyState}>
               <MascotIllustration expression="empty" size={132} />

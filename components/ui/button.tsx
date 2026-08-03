@@ -20,6 +20,7 @@ export function AppButton({
   icon,
   fullWidth = false,
   disabled,
+  accessibilityState,
   onPress,
   style,
   ...props
@@ -30,6 +31,7 @@ export function AppButton({
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityState={{ ...accessibilityState, disabled: Boolean(disabled) }}
       disabled={disabled}
       onPress={(event) => {
         void Haptics.selectionAsync();

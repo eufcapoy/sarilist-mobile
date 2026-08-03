@@ -22,11 +22,11 @@ export function ScreenHeader({ title, subtitle, onBack }: ScreenHeaderProps) {
         <Feather color={Colors.charcoal} name="arrow-left" size={21} />
       </Pressable>
       <View style={styles.copy}>
-        <AppText numberOfLines={1} variant="heading">
+        <AppText numberOfLines={2} variant="heading">
           {title}
         </AppText>
         {subtitle ? (
-          <AppText numberOfLines={1} tone="muted" variant="caption">
+          <AppText numberOfLines={2} tone="muted" variant="caption">
             {subtitle}
           </AppText>
         ) : null}

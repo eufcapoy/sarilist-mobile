@@ -6,17 +6,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BrandMark } from '@/components/brand-mark';
 import { FloatingActionDock } from '@/components/navigation/floating-action-dock';
+import { WalkthroughTarget } from '@/components/onboarding/walkthrough-target';
 import { ListHistoryRow } from '@/components/shopping/list-history-row';
 import { AppDialog } from '@/components/ui/app-dialog';
 import { AppText } from '@/components/ui/app-text';
 import { AppButton } from '@/components/ui/button';
 import { Surface } from '@/components/ui/surface';
 import { Colors, Radii, Shadows, Spacing } from '@/constants/theme';
+import { useOnboarding } from '@/state/onboarding-context';
 import { useShoppingList } from '@/state/shopping-list-context';
 
 export default function HomeScreen() {
   const router = useRouter();
   const { openList, savedLists } = useShoppingList();
+  const { showOnboarding } = useOnboarding();
   const [upcomingScreen, setUpcomingScreen] = useState<string>();
 
   function openSavedList(id: string) {
@@ -36,15 +39,25 @@ export default function HomeScreen() {
             <AppText variant="heading">SariList</AppText>
           </View>
 
-          <Pressable
-            accessibilityLabel="Open profile"
-            accessibilityRole="button"
-            onPress={() => setUpcomingScreen('Profile')}
-            style={({ pressed }) => [styles.avatar, pressed && styles.rowPressed]}>
-            <AppText tone="accent" variant="label">
-              EM
-            </AppText>
-          </Pressable>
+          <View style={styles.headerActions}>
+            <Pressable
+              accessibilityHint="Replays the SariList walkthrough"
+              accessibilityLabel="How SariList works"
+              accessibilityRole="button"
+              onPress={showOnboarding}
+              style={({ pressed }) => [styles.helpButton, pressed && styles.rowPressed]}>
+              <Feather color={Colors.forest} name="help-circle" size={20} />
+            </Pressable>
+            <Pressable
+              accessibilityLabel="Open profile"
+              accessibilityRole="button"
+              onPress={() => setUpcomingScreen('Profile')}
+              style={({ pressed }) => [styles.avatar, pressed && styles.rowPressed]}>
+              <AppText tone="accent" variant="label">
+                EM
+              </AppText>
+            </Pressable>
+          </View>
         </View>
 
         <View style={styles.intro}>
@@ -58,24 +71,26 @@ export default function HomeScreen() {
         </View>
 
         <Surface elevated style={styles.hero}>
-          <View style={styles.heroDecorationLarge} />
-          <View style={styles.heroDecorationSmall} />
-          <View style={styles.heroIcon}>
-            <Feather color={Colors.forest} name="edit-3" size={20} />
-          </View>
-          <AppText style={styles.heroTitle} tone="inverse" variant="title">
-            Start with a fresh list
-          </AppText>
-          <AppText style={styles.heroBody} tone="inverse">
-            Add what you need now. Grouping and shopping mode will keep the trip moving later.
-          </AppText>
-          <AppButton
-            icon="plus"
-            label="Create new list"
-            onPress={() => router.push('/new-list')}
-            style={styles.heroButton}
-            variant="secondary"
-          />
+            <View style={styles.heroDecorationLarge} />
+            <View style={styles.heroDecorationSmall} />
+            <View style={styles.heroIcon}>
+              <Feather color={Colors.forest} name="edit-3" size={20} />
+            </View>
+            <AppText style={styles.heroTitle} tone="inverse" variant="title">
+              Start with a fresh list
+            </AppText>
+            <AppText style={styles.heroBody} tone="inverse">
+              Add what you need now. Grouping and shopping mode will keep the trip moving later.
+            </AppText>
+          <WalkthroughTarget id="home-create" style={styles.heroTarget}>
+            <AppButton
+              icon="plus"
+              label="Create new list"
+              onPress={() => router.push('/new-list')}
+              style={styles.heroButton}
+              variant="secondary"
+            />
+          </WalkthroughTarget>
         </Surface>
 
         <View style={styles.quickActions}>
@@ -94,7 +109,6 @@ export default function HomeScreen() {
                 Turn a photo into a tidy list
               </AppText>
             </View>
-            <Feather color={Colors.textSubtle} name="arrow-up-right" size={19} />
           </Pressable>
         </View>
 
@@ -178,6 +192,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Spacing[3],
   },
+  headerActions: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: Spacing[2],
+  },
+  helpButton: {
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderColor: Colors.border,
+    borderRadius: Radii.pill,
+    borderWidth: 1,
+    height: 44,
+    justifyContent: 'center',
+    width: 44,
+  },
   avatar: {
     alignItems: 'center',
     backgroundColor: Colors.forestSoft,
@@ -241,6 +270,9 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     backgroundColor: Colors.cream,
     borderColor: Colors.cream,
+  },
+  heroTarget: {
+    alignSelf: 'flex-start',
   },
   quickActions: {
     marginTop: Spacing[4],

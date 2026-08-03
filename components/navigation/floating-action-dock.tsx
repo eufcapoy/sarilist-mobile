@@ -6,6 +6,7 @@ import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/ui/app-text';
+import { WalkthroughTarget } from '@/components/onboarding/walkthrough-target';
 import { Colors, Radii, Shadows, Spacing } from '@/constants/theme';
 
 type FloatingActionDockProps = {
@@ -73,23 +74,25 @@ export function FloatingActionDock({
           </Pressable>
 
           <View style={styles.actionSlot}>
-            <Pressable
-              accessibilityLabel="Create new list"
-              accessibilityRole="button"
-              onPress={() => {
-                triggerHaptic();
-                onCreatePress();
-              }}
-              style={({ pressed }) => [styles.createButton, pressed && styles.createPressed]}>
-              <Feather color={Colors.cream} name="plus" size={27} />
-            </Pressable>
+            <WalkthroughTarget id="home-new-list-nav" shape="circle" style={styles.createTarget}>
+              <Pressable
+                accessibilityLabel="Create new list"
+                accessibilityRole="button"
+                onPress={() => {
+                  triggerHaptic();
+                  onCreatePress();
+                }}
+                style={({ pressed }) => [styles.createButton, pressed && styles.createPressed]}>
+                <Feather color={Colors.cream} name="plus" size={27} />
+              </Pressable>
+            </WalkthroughTarget>
             <AppText style={styles.createLabel} variant="caption">
               New list
             </AppText>
           </View>
 
           <Pressable
-            accessibilityHint="This feature is coming soon"
+            accessibilityHint="Opens the camera and photo options for scanning a list"
             accessibilityLabel="Scan a list"
             accessibilityRole="button"
             onPress={() => {
@@ -99,7 +102,6 @@ export function FloatingActionDock({
             style={({ pressed }) => [styles.navItem, pressed && styles.pressed]}>
             <View style={styles.scanIconWrap}>
               <Feather color={Colors.textMuted} name="camera" size={20} />
-              <View style={styles.soonDot} />
             </View>
             <AppText style={styles.navLabel} tone="muted" variant="caption">
               Scan
@@ -169,17 +171,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 42,
   },
-  soonDot: {
-    backgroundColor: Colors.cream,
-    borderColor: Colors.surface,
-    borderRadius: Radii.pill,
-    borderWidth: 2,
-    height: 10,
-    position: 'absolute',
-    right: 7,
-    top: 1,
-    width: 10,
-  },
   navLabel: {
     fontSize: 11,
     lineHeight: 14,
@@ -204,9 +195,12 @@ const styles = StyleSheet.create({
     borderWidth: 4,
     height: 58,
     justifyContent: 'center',
-    marginTop: -24,
     width: 58,
     ...Shadows.soft,
+  },
+  createTarget: {
+    borderRadius: Radii.pill,
+    marginTop: -24,
   },
   createLabel: {
     fontSize: 11,

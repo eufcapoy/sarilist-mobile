@@ -66,9 +66,7 @@ export function ListHistoryRow({
               style={({ pressed }) => [styles.moreButton, pressed && styles.pressed]}>
               <Feather color={Colors.textMuted} name="more-vertical" size={19} />
             </Pressable>
-          ) : (
-            <Feather color={Colors.textSubtle} name="chevron-right" size={18} />
-          )}
+          ) : null}
         </View>
       </Pressable>
       {showDivider ? <View style={styles.divider} /> : null}

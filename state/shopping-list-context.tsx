@@ -9,6 +9,15 @@ function upsertList(lists: ShoppingList[], list: ShoppingList) {
   );
 }
 
+function createEmptyActiveList(): ShoppingList {
+  return {
+    id: `empty-${Date.now()}`,
+    name: 'New shopping list',
+    budget: 0,
+    items: [],
+  };
+}
+
 type ShoppingListContextValue = {
   activeList: ShoppingList;
   savedLists: ShoppingList[];
@@ -92,9 +101,16 @@ export function ShoppingListProvider({ children }: { children: ReactNode }) {
     [savedLists],
   );
 
-  const deleteList = useCallback((id: string) => {
-    setSavedLists((lists) => lists.filter((list) => list.id !== id));
-  }, []);
+  const deleteList = useCallback(
+    (id: string) => {
+      const remainingLists = savedLists.filter((list) => list.id !== id);
+      setSavedLists(remainingLists);
+      setActiveList((currentList) =>
+        currentList.id === id ? (remainingLists[0] ?? createEmptyActiveList()) : currentList,
+      );
+    },
+    [savedLists],
+  );
 
   const updateItem = useCallback((id: string, updates: Partial<ShoppingItem>) => {
     setActiveList((currentList) => {

@@ -40,7 +40,7 @@ Review Scan accepts camera and gallery photos, while recognition results remain 
 ## Product roadmap
 
 1. List management: rename, duplicate, and delete with themed confirmation. — Complete
-2. Onboarding and tutorial using the cat companion.
+2. Live user onboarding flow with cat-guided spotlights across the real app screens. — Complete (session-based until persistence)
 3. Accessibility and cross-screen responsive QA.
 4. Permanent storage.
 5. Actual OCR integration.

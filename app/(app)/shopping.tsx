@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { QuantityUnitControl } from '@/components/shopping/quantity-unit-control';
+import { WalkthroughTarget } from '@/components/onboarding/walkthrough-target';
 import { AppDialog } from '@/components/ui/app-dialog';
 import { AppText } from '@/components/ui/app-text';
 import { AppButton } from '@/components/ui/button';
@@ -42,8 +43,9 @@ export default function ShoppingModeScreen() {
     (item) => item.purchased || item.unavailable,
   ).length;
   const progress = activeList.items.length ? completedCount / activeList.items.length : 0;
+  const hasBudget = activeList.budget > 0;
   const runningTotal = activeList.items.reduce((total, item) => {
-    if (item.unavailable || item.unitPrice === undefined) {
+    if (!item.purchased || item.unavailable || item.unitPrice === undefined) {
       return total;
     }
 
@@ -112,33 +114,37 @@ export default function ShoppingModeScreen() {
             ]}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}>
-            <Surface style={styles.overview}>
-              <View style={styles.overviewTopRow}>
-                <View style={styles.overviewCopy}>
-                  <AppText tone="inverse" variant="overline">
-                    {activeList.name}
-                  </AppText>
-                  <AppText style={styles.remainingAmount} tone="inverse" variant="title">
-                    {remaining >= 0
-                      ? `${formatMoney(remaining)} left`
-                      : `${formatMoney(Math.abs(remaining))} over`}
-                  </AppText>
+            <WalkthroughTarget id="shopping-overview">
+              <Surface style={styles.overview}>
+                <View style={styles.overviewTopRow}>
+                  <View style={styles.overviewCopy}>
+                    <AppText tone="inverse" variant="overline">
+                      {activeList.name}
+                    </AppText>
+                    <AppText style={styles.remainingAmount} tone="inverse" variant="title">
+                      {hasBudget
+                        ? remaining >= 0
+                          ? `${formatMoney(remaining)} left`
+                          : `${formatMoney(Math.abs(remaining))} over`
+                        : `${formatMoney(runningTotal)} spent`}
+                    </AppText>
+                  </View>
+                  <View style={[styles.budgetPill, hasBudget && remaining < 0 && styles.budgetPillOver]}>
+                    <AppText tone="accent" variant="caption">
+                      {hasBudget ? `Budget ${formatMoney(activeList.budget)}` : 'No budget'}
+                    </AppText>
+                  </View>
                 </View>
-                <View style={[styles.budgetPill, remaining < 0 && styles.budgetPillOver]}>
-                  <AppText tone="accent" variant="caption">
-                    Budget {formatMoney(activeList.budget)}
-                  </AppText>
+                <View style={styles.progressTrack}>
+                  <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
                 </View>
-              </View>
-              <View style={styles.progressTrack}>
-                <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-              </View>
-              <AppText style={styles.progressLabel} tone="inverse" variant="caption">
-                {completedCount === activeList.items.length
-                  ? 'Everything is accounted for'
-                  : `${activeList.items.length - completedCount} item(s) remaining`}
-              </AppText>
-            </Surface>
+                <AppText style={styles.progressLabel} tone="inverse" variant="caption">
+                  {completedCount === activeList.items.length
+                    ? 'Everything is accounted for'
+                    : `${activeList.items.length - completedCount} item(s) remaining`}
+                </AppText>
+              </Surface>
+            </WalkthroughTarget>
 
             <View style={styles.sectionHeading}>
               <AppText variant="heading">Your items</AppText>
@@ -147,7 +153,7 @@ export default function ShoppingModeScreen() {
               </AppText>
             </View>
 
-            <View style={styles.itemList}>
+            <WalkthroughTarget id="shopping-items" style={styles.itemList}>
               {activeList.items.map((item) => {
                 const subtotal =
                   item.unitPrice === undefined || item.quantity === undefined
@@ -253,7 +259,7 @@ export default function ShoppingModeScreen() {
                   </Surface>
                 );
               })}
-            </View>
+            </WalkthroughTarget>
           </ScrollView>
 
           <View style={[styles.footer, compact && styles.horizontalCompact]}>

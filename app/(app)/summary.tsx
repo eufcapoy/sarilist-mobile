@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/ui/app-text';
+import { WalkthroughTarget } from '@/components/onboarding/walkthrough-target';
 import { AppButton } from '@/components/ui/button';
 import { ScreenHeader } from '@/components/ui/screen-header';
 import { Surface } from '@/components/ui/surface';
@@ -27,8 +28,14 @@ export default function SummaryScreen() {
   const purchasedItems = activeList.items.filter((item) => item.purchased);
   const unavailableItems = activeList.items.filter((item) => item.unavailable);
   const pendingItems = activeList.items.filter((item) => !item.purchased && !item.unavailable);
+  const hasBudget = activeList.budget > 0;
   const total = activeList.items.reduce((sum, item) => {
-    if (item.unavailable || item.unitPrice === undefined || item.quantity === undefined) {
+    if (
+      !item.purchased ||
+      item.unavailable ||
+      item.unitPrice === undefined ||
+      item.quantity === undefined
+    ) {
       return sum;
     }
     return sum + item.quantity * item.unitPrice;
@@ -61,22 +68,26 @@ export default function SummaryScreen() {
             compact && styles.horizontalCompact,
           ]}
           showsVerticalScrollIndicator={false}>
-          <Surface style={styles.hero}>
-            <View style={styles.heroIcon}>
-              <Feather color={Colors.forest} name="check" size={22} />
-            </View>
-            <AppText style={styles.heroLabel} tone="inverse" variant="overline">
-              Total spent
-            </AppText>
-            <AppText style={styles.total} tone="inverse" variant="display">
-              {formatMoney(total)}
-            </AppText>
-            <AppText style={styles.budgetStatus} tone="inverse" variant="caption">
-              {difference >= 0
-                ? `${formatMoney(difference)} left from your budget`
-                : `${formatMoney(difference)} over your budget`}
-            </AppText>
-          </Surface>
+          <WalkthroughTarget id="summary-total">
+            <Surface style={styles.hero}>
+              <View style={styles.heroIcon}>
+                <Feather color={Colors.forest} name="check" size={22} />
+              </View>
+              <AppText style={styles.heroLabel} tone="inverse" variant="overline">
+                Total spent
+              </AppText>
+              <AppText style={styles.total} tone="inverse" variant="display">
+                {formatMoney(total)}
+              </AppText>
+              <AppText style={styles.budgetStatus} tone="inverse" variant="caption">
+                {hasBudget
+                  ? difference >= 0
+                    ? `${formatMoney(difference)} left from your budget`
+                    : `${formatMoney(Math.abs(difference))} over your budget`
+                  : 'This trip had no spending limit'}
+              </AppText>
+            </Surface>
+          </WalkthroughTarget>
 
           <View style={styles.metrics}>
             <Surface style={styles.metric}>
@@ -107,7 +118,10 @@ export default function SummaryScreen() {
           <Surface style={styles.breakdown}>
             {activeList.items.map((item, index) => {
               const subtotal =
-                item.quantity !== undefined && item.unitPrice !== undefined && !item.unavailable
+                item.purchased &&
+                item.quantity !== undefined &&
+                item.unitPrice !== undefined &&
+                !item.unavailable
                   ? item.quantity * item.unitPrice
                   : undefined;
               const status = item.unavailable

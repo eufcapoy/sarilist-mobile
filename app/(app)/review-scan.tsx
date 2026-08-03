@@ -17,6 +17,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScanStateSwitcher } from '@/components/scan/scan-state-switcher';
+import { WalkthroughTarget } from '@/components/onboarding/walkthrough-target';
 import { QuantityUnitControl } from '@/components/shopping/quantity-unit-control';
 import { AppText } from '@/components/ui/app-text';
 import { AppButton } from '@/components/ui/button';
@@ -319,36 +320,39 @@ export default function ReviewScanScreen() {
               </Surface>
             ) : (
               <Surface style={styles.stateCard}>
-                <MascotIllustration expression="empty" size={136} style={styles.stateMascot} />
-                <AppText style={styles.centeredText} variant="heading">Add your handwritten list</AppText>
-                <AppText style={styles.stateMessage} tone="muted">
-                  Keep the full note inside the frame and use bright, even lighting.
-                </AppText>
-                <AppButton
-                  icon="camera"
-                  label="Take a photo"
-                  onPress={() => void takePhoto()}
-                  style={styles.stateButton}
-                />
-                <AppButton
-                  icon="image"
-                  label="Choose from gallery"
-                  onPress={() => void choosePhoto()}
-                  style={styles.secondaryStateButton}
-                  variant="secondary"
-                />
-                <Pressable
-                  accessibilityRole="button"
-                  hitSlop={8}
-                  onPress={useSamplePhoto}
-                  style={({ pressed }) => pressed && styles.pressed}>
-                  <AppText style={styles.sampleLink} tone="accent" variant="label">
-                    Or preview with a sample
+                  <MascotIllustration expression="empty" size={136} style={styles.stateMascot} />
+                  <AppText style={styles.centeredText} variant="heading">Add your handwritten list</AppText>
+                  <AppText style={styles.stateMessage} tone="muted">
+                    Keep the full note inside the frame and use bright, even lighting.
                   </AppText>
-                </Pressable>
-                <AppText style={styles.privacyNote} tone="subtle" variant="caption">
-                  Your photo stays on your device during this mock phase.
-                </AppText>
+                  <WalkthroughTarget id="scan-source" style={styles.scanSourceTarget}>
+                    <AppButton
+                      fullWidth
+                      icon="camera"
+                      label="Take a photo"
+                      onPress={() => void takePhoto()}
+                    />
+                    <AppButton
+                      fullWidth
+                      icon="image"
+                      label="Choose from gallery"
+                      onPress={() => void choosePhoto()}
+                      style={styles.secondaryStateButton}
+                      variant="secondary"
+                    />
+                  </WalkthroughTarget>
+                  <Pressable
+                    accessibilityRole="button"
+                    hitSlop={8}
+                    onPress={useSamplePhoto}
+                    style={({ pressed }) => pressed && styles.pressed}>
+                    <AppText style={styles.sampleLink} tone="accent" variant="label">
+                      Or preview with a sample
+                    </AppText>
+                  </Pressable>
+                  <AppText style={styles.privacyNote} tone="subtle" variant="caption">
+                    Your photo stays on your device during this mock phase.
+                  </AppText>
               </Surface>
             )
           ) : null}
@@ -479,7 +483,6 @@ export default function ReviewScanScreen() {
             <AppButton
               disabled={items.length === 0}
               fullWidth
-              icon="arrow-right"
               label={`Continue with ${items.length} ${items.length === 1 ? 'item' : 'items'}`}
               onPress={continueToList}
             />
@@ -545,6 +548,7 @@ const styles = StyleSheet.create({
   centeredText: { textAlign: 'center' },
   stateMessage: { marginTop: Spacing[2], maxWidth: 300, textAlign: 'center' },
   stateButton: { marginTop: Spacing[6], minWidth: 210 },
+  scanSourceTarget: { alignSelf: 'stretch', marginTop: Spacing[6] },
   secondaryStateButton: { marginTop: Spacing[1], minWidth: 210 },
   sampleLink: { marginTop: Spacing[4] },
   privacyNote: { marginTop: Spacing[4], textAlign: 'center' },
@@ -608,9 +612,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.creamLight,
     borderRadius: Radii.sm,
-    height: 38,
+    height: 44,
     justifyContent: 'center',
-    width: 38,
+    width: 44,
   },
   footer: {
     backgroundColor: Colors.canvas,

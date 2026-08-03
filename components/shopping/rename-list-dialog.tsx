@@ -25,7 +25,7 @@ export function RenameListDialog({ visible, currentName, onClose, onSave }: Rena
   return (
     <Modal animationType="fade" onRequestClose={onClose} statusBarTranslucent transparent visible={visible}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.root}>
-        <Pressable accessibilityLabel="Close rename dialog" onPress={onClose} style={styles.backdrop} />
+        <Pressable accessible={false} onPress={onClose} style={styles.backdrop} />
         <View accessibilityViewIsModal style={styles.card}>
           <View style={styles.iconWrap}>
             <Feather color={Colors.forest} name="edit-2" size={21} />

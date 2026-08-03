@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { QuantityUnitControl } from '@/components/shopping/quantity-unit-control';
+import { WalkthroughTarget } from '@/components/onboarding/walkthrough-target';
 import { AppText } from '@/components/ui/app-text';
 import { AppButton } from '@/components/ui/button';
 import { ScreenHeader } from '@/components/ui/screen-header';
@@ -28,13 +29,12 @@ type DraftItem = {
   name: string;
   quantity?: number;
   unit: ShoppingUnit;
-  completed: boolean;
 };
 
 const initialItems: DraftItem[] = [
-  { id: 'rice', name: 'Rice', quantity: undefined, unit: 'sack', completed: false },
-  { id: 'eggs', name: 'Eggs', quantity: undefined, unit: 'tray', completed: false },
-  { id: 'fresh-milk', name: 'Fresh milk', quantity: undefined, unit: 'bottle', completed: false },
+  { id: 'rice', name: 'Rice', quantity: undefined, unit: 'sack' },
+  { id: 'eggs', name: 'Eggs', quantity: undefined, unit: 'tray' },
+  { id: 'fresh-milk', name: 'Fresh milk', quantity: undefined, unit: 'bottle' },
 ];
 
 export default function NewListScreen() {
@@ -44,11 +44,12 @@ export default function NewListScreen() {
   const { height, width } = useWindowDimensions();
   const compact = width < 380 || height < 700;
   const fromScan = source === 'scan';
-  const [listName, setListName] = useState(fromScan ? activeList.name : 'Weekly groceries');
+  const [listName, setListName] = useState(fromScan ? activeList.name : '');
   const [itemName, setItemName] = useState('');
   const [budget, setBudget] = useState(
     fromScan && activeList.budget > 0 ? String(activeList.budget) : fromScan ? '' : '1500',
   );
+  const [useBudget, setUseBudget] = useState(fromScan ? activeList.budget > 0 : true);
   const [items, setItems] = useState<DraftItem[]>(() =>
     fromScan
       ? activeList.items.map((item) => ({
@@ -56,7 +57,6 @@ export default function NewListScreen() {
           name: item.productName,
           quantity: item.quantity,
           unit: item.unit,
-          completed: false,
         }))
       : initialItems,
   );
@@ -84,19 +84,9 @@ export default function NewListScreen() {
         name: trimmedName,
         quantity: undefined,
         unit: 'piece',
-        completed: false,
       },
     ]);
     setItemName('');
-    void Haptics.selectionAsync();
-  }
-
-  function toggleItem(id: string) {
-    setItems((currentItems) =>
-      currentItems.map((item) =>
-        item.id === id ? { ...item, completed: !item.completed } : item,
-      ),
-    );
     void Haptics.selectionAsync();
   }
 
@@ -114,13 +104,13 @@ export default function NewListScreen() {
     saveList({
       id: `${Date.now()}-${listName.trim()}`,
       name: listName.trim(),
-      budget: Number(budget) || 0,
+      budget: useBudget ? Number(budget) || 0 : 0,
       items: items.map((item) => ({
         id: item.id,
         productName: item.name,
         quantity: item.quantity,
         unit: item.unit,
-        purchased: item.completed,
+        purchased: false,
         unavailable: false,
       })),
     });
@@ -145,109 +135,149 @@ export default function NewListScreen() {
             ]}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}>
-            <View style={styles.nameSection}>
-              <AppText tone="accent" variant="overline">
-                List name
-              </AppText>
-              <TextInput
-                accessibilityLabel="List name"
-                maxLength={50}
-                onChangeText={setListName}
-                placeholder="Name this list"
-                placeholderTextColor={Colors.textSubtle}
-                returnKeyType="done"
-                selectionColor={Colors.forest}
-                style={[styles.nameInput, compact && styles.nameInputCompact]}
-                value={listName}
-              />
-            </View>
-
-            <View style={styles.budgetSection}>
-              <View style={styles.budgetCopy}>
-                <AppText variant="bodyMedium">Shopping budget</AppText>
-                <AppText tone="muted" variant="caption">
-                  Used to track what remains
-                </AppText>
-              </View>
-              <Surface style={styles.budgetInputWrap}>
-                <AppText tone="accent" variant="bodyMedium">
-                  ₱
-                </AppText>
+            <WalkthroughTarget id="new-list-basics">
+              <View style={styles.nameSection}>
+                <View style={styles.nameLabelRow}>
+                  <AppText tone="accent" variant="overline">
+                    List name
+                  </AppText>
+                  <AppText tone="muted" variant="caption">
+                    Required
+                  </AppText>
+                </View>
                 <TextInput
-                  accessibilityLabel="Shopping budget"
-                  keyboardType="decimal-pad"
-                  maxLength={8}
-                  onChangeText={(value) => setBudget(value.replace(/[^0-9.]/g, ''))}
-                  placeholder="0"
+                  accessibilityLabel="List name"
+                  maxLength={50}
+                  onChangeText={setListName}
+                  placeholder="Type a name for this list"
                   placeholderTextColor={Colors.textSubtle}
                   returnKeyType="done"
                   selectionColor={Colors.forest}
-                  style={styles.budgetInput}
-                  value={budget}
+                  style={[styles.nameInput, compact && styles.nameInputCompact]}
+                  value={listName}
                 />
-              </Surface>
-            </View>
+              </View>
 
-            <View style={styles.sectionHeading}>
-              <View>
-                <AppText variant="heading">Items</AppText>
+              <View style={styles.budgetSection}>
+              <View style={styles.budgetCopy}>
+                <AppText variant="bodyMedium">Shopping budget</AppText>
                 <AppText tone="muted" variant="caption">
-                  {items.length} {items.length === 1 ? 'item' : 'items'} in this list
+                  Choose whether you want to track a spending limit
                 </AppText>
               </View>
-            </View>
+              <View accessibilityLabel="Budget preference" style={styles.budgetChoices}>
+                <Pressable
+                  accessibilityLabel="Shop with a budget"
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: useBudget }}
+                  onPress={() => setUseBudget(true)}
+                  style={({ pressed }) => [
+                    styles.budgetChoice,
+                    useBudget && styles.budgetChoiceSelected,
+                    pressed && styles.pressed,
+                  ]}>
+                  <Feather
+                    color={useBudget ? Colors.forest : Colors.textMuted}
+                    name="target"
+                    size={16}
+                  />
+                  <AppText tone={useBudget ? 'accent' : 'muted'} variant="caption">
+                    With budget
+                  </AppText>
+                </Pressable>
+                <Pressable
+                  accessibilityLabel="Shop without a budget"
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: !useBudget }}
+                  onPress={() => setUseBudget(false)}
+                  style={({ pressed }) => [
+                    styles.budgetChoice,
+                    !useBudget && styles.budgetChoiceSelected,
+                    pressed && styles.pressed,
+                  ]}>
+                  <Feather
+                    color={!useBudget ? Colors.forest : Colors.textMuted}
+                    name="maximize"
+                    size={16}
+                  />
+                  <AppText tone={!useBudget ? 'accent' : 'muted'} variant="caption">
+                    No budget
+                  </AppText>
+                </Pressable>
+              </View>
+              {useBudget ? (
+                <Surface style={styles.budgetInputWrap}>
+                  <AppText tone="accent" variant="bodyMedium">₱</AppText>
+                  <TextInput
+                    accessibilityLabel="Shopping budget amount"
+                    keyboardType="decimal-pad"
+                    maxLength={8}
+                    onChangeText={(value) => setBudget(value.replace(/[^0-9.]/g, ''))}
+                    placeholder="Enter amount"
+                    placeholderTextColor={Colors.textSubtle}
+                    returnKeyType="done"
+                    selectionColor={Colors.forest}
+                    style={styles.budgetInput}
+                    value={budget}
+                  />
+                </Surface>
+              ) : (
+                <View style={styles.noBudgetNote}>
+                  <Feather color={Colors.leaf} name="check-circle" size={16} />
+                  <AppText style={styles.noBudgetCopy} tone="muted" variant="caption">
+                    You can still enter prices and see your running total.
+                  </AppText>
+                </View>
+              )}
+              </View>
+            </WalkthroughTarget>
 
-            <Surface style={styles.composer}>
-              <Feather color={Colors.leaf} name="search" size={19} />
-              <TextInput
-                accessibilityLabel="Item name"
-                blurOnSubmit={false}
-                onChangeText={setItemName}
-                onSubmitEditing={addItem}
-                placeholder="Add an item"
-                placeholderTextColor={Colors.textSubtle}
-                returnKeyType="done"
-                selectionColor={Colors.forest}
-                style={styles.itemInput}
-                value={itemName}
-              />
-              <Pressable
-                accessibilityLabel="Add item"
-                accessibilityRole="button"
-                disabled={!itemName.trim()}
-                hitSlop={4}
-                onPress={addItem}
-                style={({ pressed }) => [
-                  styles.addButton,
-                  !itemName.trim() && styles.addButtonDisabled,
-                  pressed && styles.pressed,
-                ]}>
-                <Feather color={Colors.white} name="plus" size={20} />
-              </Pressable>
-            </Surface>
+            <WalkthroughTarget id="new-list-items">
+              <View style={styles.sectionHeading}>
+                <View>
+                  <AppText variant="heading">Items</AppText>
+                  <AppText tone="muted" variant="caption">
+                    {items.length} {items.length === 1 ? 'item' : 'items'} in this list
+                  </AppText>
+                </View>
+              </View>
 
-            <Surface style={styles.itemsSurface}>
+              <Surface style={styles.composer}>
+                <Feather color={Colors.leaf} name="search" size={19} />
+                <TextInput
+                  accessibilityLabel="Item name"
+                  blurOnSubmit={false}
+                  onChangeText={setItemName}
+                  onSubmitEditing={addItem}
+                  placeholder="Add an item"
+                  placeholderTextColor={Colors.textSubtle}
+                  returnKeyType="done"
+                  selectionColor={Colors.forest}
+                  style={styles.itemInput}
+                  value={itemName}
+                />
+                <Pressable
+                  accessibilityLabel="Add item"
+                  accessibilityRole="button"
+                  disabled={!itemName.trim()}
+                  hitSlop={4}
+                  onPress={addItem}
+                  style={({ pressed }) => [
+                    styles.addButton,
+                    !itemName.trim() && styles.addButtonDisabled,
+                    pressed && styles.pressed,
+                  ]}>
+                  <Feather color={Colors.white} name="plus" size={20} />
+                </Pressable>
+              </Surface>
+
+              <Surface style={styles.itemsSurface}>
               {items.length ? (
                 items.map((item, index) => (
                   <View key={item.id}>
                     <View style={[styles.itemRow, compact && styles.itemRowCompact]}>
-                      <Pressable
-                        accessibilityLabel={`Mark ${item.name} as ${item.completed ? 'not done' : 'done'}`}
-                        accessibilityRole="checkbox"
-                        accessibilityState={{ checked: item.completed }}
-                        hitSlop={8}
-                        onPress={() => toggleItem(item.id)}
-                        style={[styles.checkButton, item.completed && styles.checkButtonSelected]}>
-                        {item.completed ? (
-                          <Feather color={Colors.white} name="check" size={15} />
-                        ) : null}
-                      </Pressable>
                       <View style={styles.itemDetails}>
-                        <AppText
-                          numberOfLines={2}
-                          style={item.completed && styles.itemLabelCompleted}
-                          tone={item.completed ? 'subtle' : 'default'}
-                          variant="bodyMedium">
+                        <AppText numberOfLines={2} variant="bodyMedium">
                           {item.name}
                         </AppText>
                         <View style={styles.itemQuantity}>
@@ -282,7 +312,8 @@ export default function NewListScreen() {
                   </AppText>
                 </View>
               )}
-            </Surface>
+              </Surface>
+            </WalkthroughTarget>
 
             <View style={styles.helperRow}>
               <Feather color={Colors.leaf} name="info" size={15} />
@@ -294,9 +325,8 @@ export default function NewListScreen() {
 
           <View style={[styles.footer, compact && styles.horizontalCompact]}>
             <AppButton
-              disabled={!listName.trim() || items.length === 0 || !Number(budget)}
+              disabled={!listName.trim() || items.length === 0 || (useBudget && !Number(budget))}
               fullWidth
-              icon="arrow-right"
               label="Start shopping"
               onPress={startShopping}
             />
@@ -339,6 +369,11 @@ const styles = StyleSheet.create({
   nameSection: {
     gap: Spacing[1],
   },
+  nameLabelRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
   nameInput: {
     borderBottomColor: Colors.borderStrong,
     borderBottomWidth: 1,
@@ -355,14 +390,31 @@ const styles = StyleSheet.create({
     lineHeight: 33,
   },
   budgetSection: {
-    alignItems: 'center',
-    flexDirection: 'row',
     gap: Spacing[3],
-    justifyContent: 'space-between',
     marginTop: Spacing[5],
   },
   budgetCopy: {
+    gap: 2,
+  },
+  budgetChoices: {
+    flexDirection: 'row',
+    gap: Spacing[2],
+  },
+  budgetChoice: {
+    alignItems: 'center',
+    borderColor: Colors.borderStrong,
+    borderRadius: Radii.md,
+    borderWidth: 1,
     flex: 1,
+    flexDirection: 'row',
+    gap: Spacing[2],
+    justifyContent: 'center',
+    minHeight: 46,
+    paddingHorizontal: Spacing[3],
+  },
+  budgetChoiceSelected: {
+    backgroundColor: Colors.forestSoft,
+    borderColor: Colors.leaf,
   },
   budgetInputWrap: {
     alignItems: 'center',
@@ -371,7 +423,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     minHeight: 48,
     paddingHorizontal: Spacing[3],
-    width: 126,
+    width: '100%',
   },
   budgetInput: {
     color: Colors.charcoal,
@@ -381,7 +433,18 @@ const styles = StyleSheet.create({
     minHeight: 44,
     paddingHorizontal: Spacing[1],
     paddingVertical: 0,
-    textAlign: 'right',
+  },
+  noBudgetNote: {
+    alignItems: 'center',
+    backgroundColor: Colors.creamLight,
+    borderRadius: Radii.md,
+    flexDirection: 'row',
+    gap: Spacing[2],
+    minHeight: 48,
+    paddingHorizontal: Spacing[3],
+  },
+  noBudgetCopy: {
+    flex: 1,
   },
   sectionHeading: {
     marginBottom: Spacing[3],
@@ -408,9 +471,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.forest,
     borderRadius: Radii.sm,
-    height: 42,
+    height: 44,
     justifyContent: 'center',
-    width: 42,
+    width: 44,
   },
   addButtonDisabled: {
     backgroundColor: Colors.textSubtle,
@@ -430,20 +493,6 @@ const styles = StyleSheet.create({
   itemRowCompact: {
     minHeight: 82,
   },
-  checkButton: {
-    alignItems: 'center',
-    borderColor: Colors.borderStrong,
-    borderRadius: Radii.pill,
-    borderWidth: 1.5,
-    height: 24,
-    justifyContent: 'center',
-    marginRight: Spacing[3],
-    width: 24,
-  },
-  checkButtonSelected: {
-    backgroundColor: Colors.forest,
-    borderColor: Colors.forest,
-  },
   itemDetails: {
     flex: 1,
   },
@@ -451,20 +500,17 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginTop: Spacing[2],
   },
-  itemLabelCompleted: {
-    textDecorationLine: 'line-through',
-  },
   removeButton: {
     alignItems: 'center',
-    height: 42,
+    height: 44,
     justifyContent: 'center',
     marginLeft: Spacing[2],
-    width: 36,
+    width: 44,
   },
   divider: {
     backgroundColor: Colors.border,
     height: StyleSheet.hairlineWidth,
-    marginLeft: 52,
+    marginLeft: Spacing[4],
   },
   emptyState: {
     alignItems: 'center',

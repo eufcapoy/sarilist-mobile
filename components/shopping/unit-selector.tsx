@@ -26,8 +26,8 @@ export function UnitSelector({ value, visible, onClose, onChange }: UnitSelector
       transparent
       visible={visible}>
       <View style={styles.modalRoot}>
-        <Pressable accessibilityLabel="Close unit selector" onPress={onClose} style={styles.backdrop} />
-        <SafeAreaView edges={['bottom']} style={styles.sheet}>
+        <Pressable accessible={false} onPress={onClose} style={styles.backdrop} />
+        <SafeAreaView accessibilityViewIsModal edges={['bottom']} style={styles.sheet}>
           <View style={styles.handle} />
           <View style={styles.header}>
             <View>
@@ -122,9 +122,9 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     borderRadius: Radii.md,
     borderWidth: 1,
-    height: 42,
+    height: 44,
     justifyContent: 'center',
-    width: 42,
+    width: 44,
   },
   options: {
     flexDirection: 'row',

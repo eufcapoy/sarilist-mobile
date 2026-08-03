@@ -33,8 +33,8 @@ export function ListActionsSheet({
   return (
     <Modal animationType="fade" onRequestClose={onClose} statusBarTranslucent transparent visible={visible}>
       <View style={styles.root}>
-        <Pressable accessibilityLabel="Close list actions" onPress={onClose} style={styles.backdrop} />
-        <SafeAreaView edges={['bottom']} style={styles.sheet}>
+        <Pressable accessible={false} onPress={onClose} style={styles.backdrop} />
+        <SafeAreaView accessibilityViewIsModal edges={['bottom']} style={styles.sheet}>
           <View style={styles.handle} />
           <View style={styles.header}>
             <View style={styles.headerCopy}>
@@ -71,7 +71,6 @@ export function ListActionsSheet({
                   </AppText>
                   <AppText tone="muted" variant="caption">{action.detail}</AppText>
                 </View>
-                <Feather color={Colors.textSubtle} name="chevron-right" size={18} />
               </Pressable>
             );
           })}
