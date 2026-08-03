@@ -297,8 +297,9 @@ export function OnboardingFlow({ visible, onDismiss, onStartList }: OnboardingFl
       targetLayouts
         .map((layout) => {
           const padding = layout.shape === 'circle' ? 5 : spotlightPadding;
+          const verticalOffset = layout.id === 'new-list-items' ? 28 : 0;
           const x = Math.max(8, layout.x - padding);
-          const y = Math.max(8, layout.y - padding);
+          const y = Math.max(8, layout.y - padding + verticalOffset);
           const maxWidth = width - x - 8;
           const maxHeight = height - y - 8;
           const guidedHeight =
@@ -343,6 +344,10 @@ export function OnboardingFlow({ visible, onDismiss, onStartList }: OnboardingFl
   const cardPosition = useMemo(() => {
     const topLimit = controlsTop + 48;
     const bottomLimit = height - (skipBottom + 52);
+    if (stepIndex === 0) {
+      const availableHeight = bottomLimit - topLimit;
+      return { top: Math.max(topLimit, topLimit + (availableHeight - cardHeight) / 2) };
+    }
     if (!spotlights.length) {
       return { top: Math.min(bottomLimit - cardHeight, Math.max(topLimit, height * 0.2)) };
     }
@@ -369,7 +374,7 @@ export function OnboardingFlow({ visible, onDismiss, onStartList }: OnboardingFl
         ? Math.max(topLimit, Math.min(largestGap.start, bottomLimit - cardHeight))
         : Math.max(topLimit, bottomLimit - cardHeight),
     };
-  }, [cardHeight, controlsTop, height, skipBottom, spotlights]);
+  }, [cardHeight, controlsTop, height, skipBottom, spotlights, stepIndex]);
 
   const cardWidth = Math.min(440, width - Spacing[8]);
 
