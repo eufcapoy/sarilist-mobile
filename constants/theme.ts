@@ -1,41 +1,131 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
-import { Platform } from 'react-native';
-
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+import { Platform, type TextStyle, type ViewStyle } from 'react-native';
 
 export const Colors = {
+  forest: '#174C3C',
+  forestDeep: '#0F382D',
+  forestSoft: '#DDE9E1',
+  leaf: '#6F8F78',
+  cream: '#F3E8D2',
+  creamLight: '#FAF5EA',
+  canvas: '#FCFAF5',
+  surface: '#FFFFFF',
+  charcoal: '#222722',
+  textMuted: '#6F756F',
+  textSubtle: '#959A94',
+  border: '#E9E5DC',
+  borderStrong: '#DCD7CC',
+  white: '#FFFFFF',
+  danger: '#A04A40',
+  transparent: 'transparent',
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    text: '#222722',
+    background: '#FCFAF5',
+    tint: '#174C3C',
+    icon: '#6F756F',
+    tabIconDefault: '#959A94',
+    tabIconSelected: '#174C3C',
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    text: '#FCFAF5',
+    background: '#0F382D',
+    tint: '#F3E8D2',
+    icon: '#DDE9E1',
+    tabIconDefault: '#959A94',
+    tabIconSelected: '#F3E8D2',
   },
-};
+} as const;
 
+export const Spacing = {
+  1: 4,
+  2: 8,
+  3: 12,
+  4: 16,
+  5: 20,
+  6: 24,
+  7: 28,
+  8: 32,
+  10: 40,
+  12: 48,
+  16: 64,
+} as const;
+
+export const Radii = {
+  sm: 10,
+  md: 16,
+  lg: 22,
+  xl: 28,
+  pill: 999,
+} as const;
+
+export const Typography = {
+  display: {
+    fontSize: 40,
+    lineHeight: 45,
+    fontWeight: '700',
+    letterSpacing: -1.4,
+  },
+  title: {
+    fontSize: 28,
+    lineHeight: 34,
+    fontWeight: '700',
+    letterSpacing: -0.7,
+  },
+  heading: {
+    fontSize: 21,
+    lineHeight: 27,
+    fontWeight: '700',
+    letterSpacing: -0.25,
+  },
+  body: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '400',
+  },
+  bodyMedium: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '600',
+  },
+  label: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '600',
+  },
+  caption: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '500',
+  },
+  overline: {
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+  },
+} satisfies Record<string, TextStyle>;
+
+export const Shadows = {
+  soft: Platform.select<ViewStyle>({
+    ios: {
+      shadowColor: Colors.forestDeep,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.07,
+      shadowRadius: 18,
+    },
+    android: {
+      elevation: 2,
+    },
+    default: {},
+  }),
+} as const;
+
+// Kept for compatibility with the original starter components while they are phased out.
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
     sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
     serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: 'ui-monospace',
   },
   default: {
