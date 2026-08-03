@@ -16,7 +16,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { ScanStateSwitcher } from '@/components/scan/scan-state-switcher';
 import { WalkthroughTarget } from '@/components/onboarding/walkthrough-target';
 import { QuantityUnitControl } from '@/components/shopping/quantity-unit-control';
 import { AppText } from '@/components/ui/app-text';
@@ -26,6 +25,8 @@ import { ScreenHeader } from '@/components/ui/screen-header';
 import { Surface } from '@/components/ui/surface';
 import { Colors, Radii, Spacing } from '@/constants/theme';
 import { mockScannedItems } from '@/data/mock-scan';
+import { OCRServiceError } from '@/services/ocr/ocr-service';
+import { ocrService } from '@/services/ocr/remote-ocr-service';
 import { useShoppingList } from '@/state/shopping-list-context';
 import type { ScannedItem, ScanStatus } from '@/types/scan';
 
@@ -40,6 +41,7 @@ type SelectedPhoto = {
   width: number;
   height: number;
   fileName?: string | null;
+  mimeType?: string | null;
 };
 
 export default function ReviewScanScreen() {
@@ -79,6 +81,7 @@ export default function ReviewScanScreen() {
             width: asset.width,
             height: asset.height,
             fileName: asset.fileName,
+            mimeType: asset.mimeType,
           });
           setStatus('empty');
         }
@@ -96,19 +99,6 @@ export default function ReviewScanScreen() {
     };
   }, []);
 
-  useEffect(() => {
-    if (status !== 'loading') {
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      setItems(cloneMockItems());
-      setStatus('success');
-    }, 1400);
-
-    return () => clearTimeout(timer);
-  }, [status]);
-
   function goBack() {
     if (router.canGoBack()) {
       router.back();
@@ -117,27 +107,16 @@ export default function ReviewScanScreen() {
     router.replace('/');
   }
 
-  function selectState(nextStatus: ScanStatus) {
-    setPermissionBlocked(false);
-    if (nextStatus === 'empty') {
-      setPhoto(undefined);
-    }
-    if (nextStatus === 'error') {
-      setLastSource('sample');
-      setErrorTitle("We couldn't read that");
-      setErrorMessage('The photo may be blurry or too dark. Try again with the full note inside the frame.');
-    }
-    if (nextStatus === 'success') {
-      setItems(cloneMockItems());
-    }
-    setStatus(nextStatus);
-    void Haptics.selectionAsync();
-  }
-
   function applyPickerResult(result: ImagePicker.ImagePickerResult) {
     if (result.canceled || !result.assets[0]) return;
     const asset = result.assets[0];
-    setPhoto({ uri: asset.uri, width: asset.width, height: asset.height, fileName: asset.fileName });
+    setPhoto({
+      uri: asset.uri,
+      width: asset.width,
+      height: asset.height,
+      fileName: asset.fileName,
+      mimeType: asset.mimeType,
+    });
     setPermissionBlocked(false);
     setStatus('empty');
     void Haptics.selectionAsync();
@@ -210,6 +189,40 @@ export default function ReviewScanScreen() {
     setPermissionBlocked(false);
     setPhoto(undefined);
     setStatus('loading');
+    setTimeout(() => {
+      setItems(cloneMockItems());
+      setStatus('success');
+    }, 900);
+  }
+
+  async function reviewSelectedPhoto() {
+    if (!photo) return;
+
+    setPermissionBlocked(false);
+    setStatus('loading');
+
+    try {
+      const result = await ocrService.recognize(photo);
+      setItems(result.items);
+      setStatus('success');
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (error) {
+      const serviceError = error instanceof OCRServiceError ? error : undefined;
+      setErrorTitle(serviceError?.code === 'no-text' ? 'No items found yet' : 'Scanner is not ready');
+      setErrorMessage(
+        serviceError?.code === 'not-configured'
+          ? 'Connect SariList to the scanner on your computer, then try this photo again.'
+          : serviceError?.code === 'unreachable'
+            ? 'Make sure the scanner is running and your phone and computer are on the same Wi-Fi.'
+            : serviceError?.code === 'timeout'
+              ? 'Reading took too long. Keep the scanner open and try once more.'
+              : serviceError?.code === 'no-text'
+                ? 'Try a brighter, straighter photo with the whole handwritten list visible.'
+                : 'The scanner sent back something SariList could not read. Please try again.',
+      );
+      setStatus('error');
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    }
   }
 
   function retryAfterError() {
@@ -262,8 +275,6 @@ export default function ReviewScanScreen() {
           ]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}>
-          <ScanStateSwitcher onChange={selectState} value={status} />
-
           {status === 'empty' ? (
             photo ? (
               <Surface style={styles.previewCard}>
@@ -311,11 +322,11 @@ export default function ReviewScanScreen() {
                   fullWidth
                   icon="search"
                   label="Review this photo"
-                  onPress={() => setStatus('loading')}
+                  onPress={() => void reviewSelectedPhoto()}
                   style={styles.reviewButton}
                 />
                 <AppText style={styles.privacyNote} tone="subtle" variant="caption">
-                  Recognition is mocked for now; the selected image stays on your device.
+                  During testing, this photo is sent only to the scanner running on your computer.
                 </AppText>
               </Surface>
             ) : (
@@ -351,7 +362,7 @@ export default function ReviewScanScreen() {
                     </AppText>
                   </Pressable>
                   <AppText style={styles.privacyNote} tone="subtle" variant="caption">
-                    Your photo stays on your device during this mock phase.
+                    The sample is a preview. Your own photo uses the scanner on your computer.
                   </AppText>
               </Surface>
             )

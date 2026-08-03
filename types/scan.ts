@@ -10,3 +10,14 @@ export type ScannedItem = {
   unit: ShoppingUnit;
   confidence: number;
 };
+
+export type OCRImage = {
+  uri: string;
+  fileName?: string | null;
+  mimeType?: string | null;
+};
+
+export type OCRResult = {
+  items: ScannedItem[];
+  processingMs?: number;
+};
