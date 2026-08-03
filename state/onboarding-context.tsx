@@ -2,12 +2,15 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
   type ReactNode,
 } from 'react';
 import type { View } from 'react-native';
+
+import { loadOnboardingComplete, saveOnboardingComplete } from '@/storage/app-storage';
 
 export type WalkthroughTargetId =
   | 'home-create'
@@ -31,6 +34,7 @@ export type WalkthroughTargetLayout = {
 
 type OnboardingContextValue = {
   onboardingVisible: boolean;
+  storageReady: boolean;
   targetRevision: number;
   dismissOnboarding: () => void;
   showOnboarding: () => void;
@@ -45,11 +49,36 @@ type OnboardingContextValue = {
 const OnboardingContext = createContext<OnboardingContextValue | null>(null);
 
 export function OnboardingProvider({ children }: { children: ReactNode }) {
-  const [onboardingVisible, setOnboardingVisible] = useState(true);
+  const [onboardingVisible, setOnboardingVisible] = useState(false);
+  const [storageReady, setStorageReady] = useState(false);
   const [targetRevision, setTargetRevision] = useState(0);
   const targets = useRef(
     new Map<WalkthroughTargetId, { node: View; shape: WalkthroughTargetLayout['shape'] }>(),
   );
+
+  useEffect(() => {
+    let active = true;
+
+    void loadOnboardingComplete()
+      .then((complete) => {
+        if (active) setOnboardingVisible(!complete);
+      })
+      .catch(() => {
+        if (active) setOnboardingVisible(true);
+      })
+      .finally(() => {
+        if (active) setStorageReady(true);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const dismissOnboarding = useCallback(() => {
+    setOnboardingVisible(false);
+    void saveOnboardingComplete(true).catch(() => undefined);
+  }, []);
 
   const registerTarget = useCallback((
     id: WalkthroughTargetId,
@@ -84,13 +113,14 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       onboardingVisible,
+      storageReady,
       targetRevision,
-      dismissOnboarding: () => setOnboardingVisible(false),
+      dismissOnboarding,
       showOnboarding: () => setOnboardingVisible(true),
       registerTarget,
       measureTarget,
     }),
-    [measureTarget, onboardingVisible, registerTarget, targetRevision],
+    [dismissOnboarding, measureTarget, onboardingVisible, registerTarget, storageReady, targetRevision],
   );
 
   return <OnboardingContext.Provider value={value}>{children}</OnboardingContext.Provider>;

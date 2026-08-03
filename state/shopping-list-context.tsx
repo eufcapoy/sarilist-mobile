@@ -1,6 +1,15 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 
 import { mockSavedLists } from '@/data/mock-lists';
+import { loadShoppingState, saveShoppingState } from '@/storage/app-storage';
 import type { ShoppingItem, ShoppingList } from '@/types/shopping';
 
 function upsertList(lists: ShoppingList[], list: ShoppingList) {
@@ -21,6 +30,7 @@ function createEmptyActiveList(): ShoppingList {
 type ShoppingListContextValue = {
   activeList: ShoppingList;
   savedLists: ShoppingList[];
+  storageReady: boolean;
   setActiveList: (list: ShoppingList) => void;
   saveList: (list: ShoppingList) => void;
   finishActiveList: () => void;
@@ -36,6 +46,36 @@ const ShoppingListContext = createContext<ShoppingListContextValue | null>(null)
 export function ShoppingListProvider({ children }: { children: ReactNode }) {
   const [savedLists, setSavedLists] = useState<ShoppingList[]>(mockSavedLists);
   const [activeList, setActiveList] = useState<ShoppingList>(mockSavedLists[0]);
+  const [storageReady, setStorageReady] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    void loadShoppingState()
+      .then((storedState) => {
+        if (!active || !storedState) return;
+        setSavedLists(storedState.savedLists);
+        setActiveList(storedState.activeList);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setStorageReady(true);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!storageReady) return;
+
+    const timer = setTimeout(() => {
+      void saveShoppingState({ activeList, savedLists }).catch(() => undefined);
+    }, 120);
+
+    return () => clearTimeout(timer);
+  }, [activeList, savedLists, storageReady]);
 
   const saveList = useCallback((list: ShoppingList) => {
     const savedList = { ...list, updatedAt: Date.now(), finishedAt: undefined };
@@ -129,6 +169,7 @@ export function ShoppingListProvider({ children }: { children: ReactNode }) {
     () => ({
       activeList,
       savedLists,
+      storageReady,
       setActiveList,
       saveList,
       finishActiveList,
@@ -147,6 +188,7 @@ export function ShoppingListProvider({ children }: { children: ReactNode }) {
       renameList,
       saveList,
       savedLists,
+      storageReady,
       updateItem,
     ],
   );

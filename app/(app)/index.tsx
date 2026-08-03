@@ -130,7 +130,7 @@ export default function HomeScreen() {
         </View>
 
         <Surface style={styles.listSurface}>
-          {savedLists.slice(0, 2).map((list, index, visibleLists) => (
+          {savedLists.slice(0, 3).map((list, index, visibleLists) => (
             <ListHistoryRow
               key={list.id}
               list={list}
