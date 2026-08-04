@@ -44,6 +44,7 @@ type SelectedPhoto = {
   height: number;
   fileName?: string | null;
   mimeType?: string | null;
+  file?: Blob | null;
 };
 
 function getEstimatedProgress(elapsedSeconds: number) {
@@ -103,6 +104,7 @@ export default function ReviewScanScreen() {
             height: asset.height,
             fileName: asset.fileName,
             mimeType: asset.mimeType,
+            file: asset.file,
           });
           setStatus('empty');
         }
@@ -173,6 +175,7 @@ export default function ReviewScanScreen() {
       height: asset.height,
       fileName: asset.fileName,
       mimeType: asset.mimeType,
+      file: asset.file,
     });
     setPermissionBlocked(false);
     setStatus('empty');

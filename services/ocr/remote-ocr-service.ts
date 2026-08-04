@@ -86,14 +86,20 @@ export class RemoteOCRService implements OCRService {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
     const form = new FormData();
-    form.append(
-      'image',
-      {
-        name: image.fileName ?? `sarilist-${Date.now()}.jpg`,
-        type: inferMimeType(image),
-        uri: image.uri,
-      } as unknown as Blob,
-    );
+    const fileName = image.fileName ?? `sarilist-${Date.now()}.jpg`;
+
+    if (image.file) {
+      form.append('image', image.file, fileName);
+    } else {
+      form.append(
+        'image',
+        {
+          name: fileName,
+          type: inferMimeType(image),
+          uri: image.uri,
+        } as unknown as Blob,
+      );
+    }
 
     try {
       const response = await fetch(`${this.baseUrl.replace(/\/$/, '')}/v1/ocr/recognize`, {

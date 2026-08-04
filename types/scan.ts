@@ -21,6 +21,7 @@ export type OCRImage = {
   uri: string;
   fileName?: string | null;
   mimeType?: string | null;
+  file?: Blob | null;
 };
 
 export type OCRResult = {
