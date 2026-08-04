@@ -37,6 +37,16 @@ export function QuantityUnitControl({
     }
 
     setQuantityText(value);
+
+    if (!value) {
+      onQuantityChange(undefined);
+      return;
+    }
+
+    if (!value.endsWith('.')) {
+      const parsed = Number(value);
+      onQuantityChange(Number.isFinite(parsed) && parsed > 0 ? parsed : undefined);
+    }
   }
 
   function normalizeQuantity(finalValue?: string) {

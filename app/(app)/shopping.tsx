@@ -228,7 +228,7 @@ export default function ShoppingModeScreen() {
                     </View>
 
                     {!item.unavailable ? (
-                      <View style={styles.itemControls}>
+                      <View style={[styles.itemControls, compact && styles.itemControlsCompact]}>
                         <QuantityUnitControl
                           onQuantityChange={(quantity) => updateItem(item.id, { quantity })}
                           onUnitChange={(unit) => updateItem(item.id, { unit })}
@@ -236,8 +236,12 @@ export default function ShoppingModeScreen() {
                           unit={item.unit}
                         />
 
-                        <View style={styles.priceWrap}>
-                          <View style={styles.priceInputWrap}>
+                        <View style={[styles.priceWrap, compact && styles.priceWrapCompact]}>
+                          <View
+                            style={[
+                              styles.priceInputWrap,
+                              compact && styles.priceInputWrapCompact,
+                            ]}>
                             <AppText tone="muted" variant="label">
                               ₱
                             </AppText>
@@ -253,7 +257,10 @@ export default function ShoppingModeScreen() {
                               value={item.unitPrice?.toString() ?? ''}
                             />
                           </View>
-                          <AppText tone={subtotal === undefined ? 'subtle' : 'accent'} variant="caption">
+                          <AppText
+                            style={compact && styles.priceCaptionCompact}
+                            tone={subtotal === undefined ? 'subtle' : 'accent'}
+                            variant="caption">
                             {subtotal === undefined
                               ? item.quantity === undefined
                                 ? 'Price paid'
@@ -443,8 +450,16 @@ const styles = StyleSheet.create({
     marginTop: Spacing[4],
     paddingTop: Spacing[3],
   },
+  itemControlsCompact: {
+    alignItems: 'stretch',
+    flexDirection: 'column',
+  },
   priceWrap: {
     alignItems: 'flex-end',
+  },
+  priceWrapCompact: {
+    alignItems: 'stretch',
+    width: '100%',
   },
   priceInputWrap: {
     alignItems: 'center',
@@ -452,6 +467,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     flexDirection: 'row',
     minWidth: 82,
+  },
+  priceInputWrapCompact: {
+    alignSelf: 'stretch',
+    width: '100%',
   },
   priceInput: {
     color: Colors.charcoal,
@@ -463,6 +482,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     textAlign: 'right',
   },
+  priceCaptionCompact: { textAlign: 'right' },
   footer: {
     alignItems: 'center',
     backgroundColor: Colors.canvas,

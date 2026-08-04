@@ -297,7 +297,8 @@ export function OnboardingFlow({ visible, onDismiss, onStartList }: OnboardingFl
       targetLayouts
         .map((layout) => {
           const padding = layout.shape === 'circle' ? 5 : spotlightPadding;
-          const verticalOffset = layout.id === 'new-list-items' ? 28 : 0;
+          const verticalOffset =
+            layout.id === 'new-list-items' ? 28 : layout.id === 'lists-history' ? 8 : 0;
           const x = Math.max(8, layout.x - padding);
           const y = Math.max(8, layout.y - padding + verticalOffset);
           const maxWidth = width - x - 8;
