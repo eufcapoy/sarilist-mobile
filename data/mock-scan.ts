@@ -25,4 +25,14 @@ export const mockScannedItems: ScannedItem[] = [
     unit: 'tray',
     confidence: 0.68,
   },
+  {
+    id: 'scan-bioderm',
+    name: 'Biodern',
+    originalText: 'Biodern',
+    confidence: 0.91,
+    suggestion: {
+      name: 'Bioderm',
+      score: 0.86,
+    },
+  },
 ];

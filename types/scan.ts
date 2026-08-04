@@ -2,6 +2,11 @@ import type { ShoppingUnit } from '@/types/shopping';
 
 export type ScanStatus = 'empty' | 'loading' | 'error' | 'success';
 
+export type ProductSuggestion = {
+  name: string;
+  score: number;
+};
+
 export type ScannedItem = {
   id: string;
   name: string;
@@ -9,6 +14,7 @@ export type ScannedItem = {
   quantity?: number;
   unit?: ShoppingUnit;
   confidence: number;
+  suggestion?: ProductSuggestion;
 };
 
 export type OCRImage = {

@@ -314,6 +314,10 @@ export default function ReviewScanScreen() {
     );
   }
 
+  function updateItemName(id: string, name: string) {
+    updateItem(id, { name, suggestion: undefined });
+  }
+
   function continueToList() {
     setActiveList({
       id: `scan-${Date.now()}`,
@@ -565,7 +569,8 @@ export default function ReviewScanScreen() {
 
               <View style={styles.itemList}>
                 {items.map((item) => {
-                  const needsReview = item.confidence < 0.75;
+                  const hasSuggestion = Boolean(item.suggestion);
+                  const needsReview = item.confidence < 0.75 || hasSuggestion;
                   return (
                     <Surface key={item.id} style={[styles.itemCard, needsReview && styles.itemCardReview]}>
                       <View style={styles.itemTopRow}>
@@ -573,7 +578,7 @@ export default function ReviewScanScreen() {
                           <TextInput
                             accessibilityLabel={`Detected item ${item.name}`}
                             maxLength={60}
-                            onChangeText={(name) => updateItem(item.id, { name })}
+                            onChangeText={(name) => updateItemName(item.id, name)}
                             selectionColor={Colors.forest}
                             style={styles.itemNameInput}
                             value={item.name}
@@ -584,10 +589,49 @@ export default function ReviewScanScreen() {
                         </View>
                         <View style={[styles.confidence, needsReview && styles.confidenceReview]}>
                           <AppText tone={needsReview ? 'default' : 'accent'} variant="overline">
-                            {needsReview ? 'Check' : `${Math.round(item.confidence * 100)}%`}
+                            {hasSuggestion
+                              ? 'Suggestion'
+                              : needsReview
+                                ? 'Check'
+                                : `${Math.round(item.confidence * 100)}%`}
                           </AppText>
                         </View>
                       </View>
+                      {item.suggestion ? (
+                        <View style={styles.suggestionBox}>
+                          <View style={styles.suggestionCopy}>
+                            <Feather color={Colors.forest} name="check-circle" size={18} />
+                            <AppText style={styles.suggestionPrompt} variant="bodyMedium">
+                              Did you mean “{item.suggestion.name}”?
+                            </AppText>
+                          </View>
+                          <View
+                            style={[
+                              styles.suggestionActions,
+                              compact && styles.suggestionActionsCompact,
+                            ]}>
+                            <AppButton
+                              accessibilityLabel={`Use ${item.suggestion.name} instead of ${item.name}`}
+                              label={`Use ${item.suggestion.name}`}
+                              onPress={() => updateItemName(item.id, item.suggestion!.name)}
+                              style={[
+                                styles.suggestionButton,
+                                compact && styles.suggestionButtonCompact,
+                              ]}
+                            />
+                            <AppButton
+                              accessibilityLabel={`Keep detected text ${item.name}`}
+                              label={`Keep ${item.name}`}
+                              onPress={() => updateItem(item.id, { suggestion: undefined })}
+                              style={[
+                                styles.suggestionButton,
+                                compact && styles.suggestionButtonCompact,
+                              ]}
+                              variant="secondary"
+                            />
+                          </View>
+                        </View>
+                      ) : null}
                       <View style={styles.itemBottomRow}>
                         <QuantityUnitControl
                           onQuantityChange={(quantity) => updateItem(item.id, { quantity })}
@@ -757,6 +801,26 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   confidenceReview: { backgroundColor: Colors.cream },
+  suggestionBox: {
+    backgroundColor: Colors.forestSoft,
+    borderRadius: Radii.md,
+    marginTop: Spacing[3],
+    padding: Spacing[3],
+  },
+  suggestionCopy: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: Spacing[2],
+  },
+  suggestionPrompt: { flex: 1 },
+  suggestionActions: {
+    flexDirection: 'row',
+    gap: Spacing[2],
+    marginTop: Spacing[3],
+  },
+  suggestionActionsCompact: { flexDirection: 'column' },
+  suggestionButton: { flex: 1, minWidth: 0 },
+  suggestionButtonCompact: { alignSelf: 'stretch', flexBasis: 'auto', flexGrow: 0 },
   itemBottomRow: {
     alignItems: 'center',
     borderTopColor: Colors.border,

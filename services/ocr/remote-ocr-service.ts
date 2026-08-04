@@ -17,6 +17,18 @@ function inferMimeType(image: OCRImage) {
 
 type RemoteScannedItem = Omit<ScannedItem, 'unit'> & { unit?: ShoppingUnit | null };
 
+function isProductSuggestion(value: unknown) {
+  if (!value || typeof value !== 'object') return false;
+  const suggestion = value as Record<string, unknown>;
+  return (
+    typeof suggestion.name === 'string' &&
+    suggestion.name.trim().length > 0 &&
+    typeof suggestion.score === 'number' &&
+    suggestion.score >= 0 &&
+    suggestion.score <= 1
+  );
+}
+
 function isScannedItem(value: unknown): value is RemoteScannedItem {
   if (!value || typeof value !== 'object') return false;
   const item = value as Record<string, unknown>;
@@ -31,7 +43,8 @@ function isScannedItem(value: unknown): value is RemoteScannedItem {
       (typeof item.unit === 'string' && supportedUnits.has(item.unit))) &&
     typeof item.confidence === 'number' &&
     item.confidence >= 0 &&
-    item.confidence <= 1
+    item.confidence <= 1 &&
+    (item.suggestion === undefined || isProductSuggestion(item.suggestion))
   );
 }
 
