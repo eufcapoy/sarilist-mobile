@@ -26,8 +26,8 @@ function isShoppingItem(value: unknown): value is ShoppingItem {
   return (
     typeof value.id === 'string' &&
     typeof value.productName === 'string' &&
-    typeof value.unit === 'string' &&
-    shoppingUnits.has(value.unit as ShoppingUnit) &&
+    (value.unit === undefined ||
+      (typeof value.unit === 'string' && shoppingUnits.has(value.unit as ShoppingUnit))) &&
     typeof value.purchased === 'boolean' &&
     typeof value.unavailable === 'boolean' &&
     (value.originalText === undefined || typeof value.originalText === 'string') &&

@@ -25,7 +25,7 @@ export type ShoppingItem = {
   productName: string;
   originalText?: string;
   quantity?: number;
-  unit: ShoppingUnit;
+  unit?: ShoppingUnit;
   unitPrice?: number;
   previousPrice?: number;
   purchased: boolean;

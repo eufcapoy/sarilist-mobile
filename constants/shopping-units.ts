@@ -30,14 +30,14 @@ export const ShoppingUnits: ShoppingUnitOption[] = [
   { value: 'milliliter', label: 'Milliliter', shortLabel: 'mL', plural: 'mL' },
 ];
 
-export function getShoppingUnit(unit: ShoppingUnit) {
-  return ShoppingUnits.find((option) => option.value === unit) ?? ShoppingUnits[0];
+export function getShoppingUnit(unit?: ShoppingUnit) {
+  return unit ? ShoppingUnits.find((option) => option.value === unit) : undefined;
 }
 
-export function formatQuantityUnit(quantity: number | undefined, unit: ShoppingUnit) {
+export function formatQuantityUnit(quantity: number | undefined, unit?: ShoppingUnit) {
   const option = getShoppingUnit(unit);
-  if (quantity === undefined) {
-    return option.shortLabel;
-  }
+  if (quantity === undefined && !option) return 'No quantity or unit';
+  if (quantity === undefined) return `Unit: ${option?.shortLabel}`;
+  if (!option) return `Qty: ${quantity}`;
   return `${quantity} ${quantity === 1 ? option.label.toLowerCase() : option.plural}`;
 }

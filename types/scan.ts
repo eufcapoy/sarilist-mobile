@@ -7,7 +7,7 @@ export type ScannedItem = {
   name: string;
   originalText: string;
   quantity?: number;
-  unit: ShoppingUnit;
+  unit?: ShoppingUnit;
   confidence: number;
 };
 

@@ -9,10 +9,10 @@ import { Colors, Radii, Shadows, Spacing } from '@/constants/theme';
 import type { ShoppingUnit } from '@/types/shopping';
 
 type UnitSelectorProps = {
-  value: ShoppingUnit;
+  value?: ShoppingUnit;
   visible: boolean;
   onClose: () => void;
-  onChange: (unit: ShoppingUnit) => void;
+  onChange: (unit?: ShoppingUnit) => void;
 };
 
 export function UnitSelector({ value, visible, onClose, onChange }: UnitSelectorProps) {
@@ -33,7 +33,7 @@ export function UnitSelector({ value, visible, onClose, onChange }: UnitSelector
             <View>
               <AppText variant="heading">Choose a unit</AppText>
               <AppText tone="muted" variant="caption">
-                Selected: {selected.label}
+                Selected: {selected?.label ?? 'No unit'}
               </AppText>
             </View>
             <Pressable
@@ -47,6 +47,26 @@ export function UnitSelector({ value, visible, onClose, onChange }: UnitSelector
           </View>
 
           <ScrollView contentContainerStyle={styles.options} showsVerticalScrollIndicator={false}>
+            <Pressable
+              accessibilityRole="radio"
+              accessibilityState={{ checked: value === undefined }}
+              onPress={() => {
+                void Haptics.selectionAsync();
+                onChange(undefined);
+                onClose();
+              }}
+              style={({ pressed }) => [
+                styles.option,
+                value === undefined && styles.optionSelected,
+                pressed && styles.pressed,
+              ]}>
+              <AppText tone={value === undefined ? 'accent' : 'default'} variant="label">
+                No unit
+              </AppText>
+              <AppText tone="muted" variant="caption">
+                Leave blank
+              </AppText>
+            </Pressable>
             {ShoppingUnits.map((option) => {
               const isSelected = option.value === value;
 

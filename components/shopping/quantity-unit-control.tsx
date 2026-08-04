@@ -10,9 +10,9 @@ import type { ShoppingUnit } from '@/types/shopping';
 
 type QuantityUnitControlProps = {
   quantity?: number;
-  unit: ShoppingUnit;
+  unit?: ShoppingUnit;
   onQuantityChange: (quantity?: number) => void;
-  onUnitChange: (unit: ShoppingUnit) => void;
+  onUnitChange: (unit?: ShoppingUnit) => void;
 };
 
 export function QuantityUnitControl({
@@ -76,12 +76,12 @@ export function QuantityUnitControl({
         />
         <View style={styles.divider} />
         <Pressable
-          accessibilityLabel={`Change unit, currently ${unitOption.label}`}
+          accessibilityLabel={`Change unit, currently ${unitOption?.label ?? 'not specified'}`}
           accessibilityRole="button"
           onPress={() => setSelectorVisible(true)}
           style={({ pressed }) => [styles.unitButton, pressed && styles.pressed]}>
-          <AppText numberOfLines={1} tone="accent" variant="label">
-            {unitOption.shortLabel}
+          <AppText numberOfLines={1} tone={unitOption ? 'accent' : 'subtle'} variant="label">
+            {unitOption?.shortLabel ?? 'Unit'}
           </AppText>
           <Feather color={Colors.leaf} name="chevron-down" size={14} />
         </Pressable>

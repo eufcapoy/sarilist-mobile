@@ -1,6 +1,7 @@
 import { ShoppingUnits } from '@/constants/shopping-units';
 import { OCRServiceError, type OCRService } from '@/services/ocr/ocr-service';
 import type { OCRImage, OCRResult, ScannedItem } from '@/types/scan';
+import type { ShoppingUnit } from '@/types/shopping';
 
 const REQUEST_TIMEOUT_MS = 90_000;
 const supportedUnits = new Set<string>(ShoppingUnits.map(({ value }) => value));
@@ -14,7 +15,9 @@ function inferMimeType(image: OCRImage) {
   return 'image/jpeg';
 }
 
-function isScannedItem(value: unknown): value is ScannedItem {
+type RemoteScannedItem = Omit<ScannedItem, 'unit'> & { unit?: ShoppingUnit | null };
+
+function isScannedItem(value: unknown): value is RemoteScannedItem {
   if (!value || typeof value !== 'object') return false;
   const item = value as Record<string, unknown>;
   return (
@@ -23,8 +26,9 @@ function isScannedItem(value: unknown): value is ScannedItem {
     typeof item.originalText === 'string' &&
     (item.quantity === undefined ||
       (typeof item.quantity === 'number' && Number.isFinite(item.quantity) && item.quantity > 0)) &&
-    typeof item.unit === 'string' &&
-    supportedUnits.has(item.unit) &&
+    (item.unit === undefined ||
+      item.unit === null ||
+      (typeof item.unit === 'string' && supportedUnits.has(item.unit))) &&
     typeof item.confidence === 'number' &&
     item.confidence >= 0 &&
     item.confidence <= 1
@@ -46,7 +50,10 @@ function parseResult(value: unknown): OCRResult {
   }
 
   return {
-    items: response.items,
+    items: response.items.map(({ unit, ...item }) => ({
+      ...item,
+      ...(unit ? { unit } : {}),
+    })),
     processingMs:
       typeof response.processingMs === 'number' ? response.processingMs : undefined,
   };

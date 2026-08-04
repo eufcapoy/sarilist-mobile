@@ -32,6 +32,11 @@ function formatMoney(value: number) {
   })}`;
 }
 
+function getItemTotal(item: ShoppingItem) {
+  if (item.unitPrice === undefined) return undefined;
+  return (item.quantity ?? 1) * item.unitPrice;
+}
+
 export default function ShoppingModeScreen() {
   const router = useRouter();
   const { height, width } = useWindowDimensions();
@@ -45,11 +50,12 @@ export default function ShoppingModeScreen() {
   const progress = activeList.items.length ? completedCount / activeList.items.length : 0;
   const hasBudget = activeList.budget > 0;
   const runningTotal = activeList.items.reduce((total, item) => {
-    if (!item.purchased || item.unavailable || item.unitPrice === undefined) {
+    const itemTotal = getItemTotal(item);
+    if (!item.purchased || item.unavailable || itemTotal === undefined) {
       return total;
     }
 
-    return total + (item.quantity ?? 0) * item.unitPrice;
+    return total + itemTotal;
   }, 0);
   const remaining = activeList.budget - runningTotal;
 
@@ -155,10 +161,7 @@ export default function ShoppingModeScreen() {
 
             <WalkthroughTarget id="shopping-items" style={styles.itemList}>
               {activeList.items.map((item) => {
-                const subtotal =
-                  item.unitPrice === undefined || item.quantity === undefined
-                    ? undefined
-                    : item.quantity * item.unitPrice;
+                const subtotal = getItemTotal(item);
 
                 return (
                   <Surface
@@ -197,7 +200,7 @@ export default function ShoppingModeScreen() {
                         </AppText>
                         {item.previousPrice !== undefined && !item.unavailable ? (
                           <AppText tone="muted" variant="caption">
-                            Previous {formatMoney(item.previousPrice)} each
+                            Previous {formatMoney(item.previousPrice)}{item.quantity === undefined ? '' : ' each'}
                           </AppText>
                         ) : null}
                         {item.unavailable ? (
@@ -239,7 +242,7 @@ export default function ShoppingModeScreen() {
                               ₱
                             </AppText>
                             <TextInput
-                              accessibilityLabel={`${item.productName} unit price`}
+                              accessibilityLabel={`${item.productName} ${item.quantity === undefined ? 'price paid' : 'unit price'}`}
                               keyboardType="decimal-pad"
                               onChangeText={(value) => setPrice(item, value)}
                               placeholder="0"
@@ -251,7 +254,11 @@ export default function ShoppingModeScreen() {
                             />
                           </View>
                           <AppText tone={subtotal === undefined ? 'subtle' : 'accent'} variant="caption">
-                            {subtotal === undefined ? 'Unit price' : `${formatMoney(subtotal)} total`}
+                            {subtotal === undefined
+                              ? item.quantity === undefined
+                                ? 'Price paid'
+                                : 'Unit price'
+                              : `${formatMoney(subtotal)} total`}
                           </AppText>
                         </View>
                       </View>

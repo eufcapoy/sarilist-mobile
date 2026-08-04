@@ -33,12 +33,11 @@ export default function SummaryScreen() {
     if (
       !item.purchased ||
       item.unavailable ||
-      item.unitPrice === undefined ||
-      item.quantity === undefined
+      item.unitPrice === undefined
     ) {
       return sum;
     }
-    return sum + item.quantity * item.unitPrice;
+    return sum + (item.quantity ?? 1) * item.unitPrice;
   }, 0);
   const difference = activeList.budget - total;
 
@@ -119,10 +118,9 @@ export default function SummaryScreen() {
             {activeList.items.map((item, index) => {
               const subtotal =
                 item.purchased &&
-                item.quantity !== undefined &&
                 item.unitPrice !== undefined &&
                 !item.unavailable
-                  ? item.quantity * item.unitPrice
+                  ? (item.quantity ?? 1) * item.unitPrice
                   : undefined;
               const status = item.unavailable
                 ? 'Unavailable'

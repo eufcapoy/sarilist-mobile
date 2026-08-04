@@ -28,7 +28,7 @@ type DraftItem = {
   id: string;
   name: string;
   quantity?: number;
-  unit: ShoppingUnit;
+  unit?: ShoppingUnit;
 };
 
 const initialItems: DraftItem[] = [
@@ -83,7 +83,7 @@ export default function NewListScreen() {
         id: `${Date.now()}-${trimmedName}`,
         name: trimmedName,
         quantity: undefined,
-        unit: 'piece',
+        unit: undefined,
       },
     ]);
     setItemName('');
