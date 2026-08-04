@@ -228,7 +228,7 @@ export default function ShoppingModeScreen() {
                     </View>
 
                     {!item.unavailable ? (
-                      <View style={[styles.itemControls, compact && styles.itemControlsCompact]}>
+                      <View style={styles.itemControls}>
                         <QuantityUnitControl
                           onQuantityChange={(quantity) => updateItem(item.id, { quantity })}
                           onUnitChange={(unit) => updateItem(item.id, { unit })}
@@ -236,13 +236,9 @@ export default function ShoppingModeScreen() {
                           unit={item.unit}
                         />
 
-                        <View style={[styles.priceWrap, compact && styles.priceWrapCompact]}>
-                          <View
-                            style={[
-                              styles.priceInputWrap,
-                              compact && styles.priceInputWrapCompact,
-                            ]}>
-                            <AppText tone="muted" variant="label">
+                        <View style={styles.priceWrap}>
+                          <View style={styles.priceInputWrap}>
+                            <AppText style={styles.currencySymbol} tone="muted" variant="label">
                               ₱
                             </AppText>
                             <TextInput
@@ -258,7 +254,10 @@ export default function ShoppingModeScreen() {
                             />
                           </View>
                           <AppText
-                            style={compact && styles.priceCaptionCompact}
+                            adjustsFontSizeToFit
+                            minimumFontScale={0.8}
+                            numberOfLines={1}
+                            style={styles.priceCaption}
                             tone={subtotal === undefined ? 'subtle' : 'accent'}
                             variant="caption">
                             {subtotal === undefined
@@ -450,39 +449,31 @@ const styles = StyleSheet.create({
     marginTop: Spacing[4],
     paddingTop: Spacing[3],
   },
-  itemControlsCompact: {
-    alignItems: 'stretch',
-    flexDirection: 'column',
-  },
   priceWrap: {
     alignItems: 'flex-end',
-  },
-  priceWrapCompact: {
-    alignItems: 'stretch',
-    width: '100%',
+    flexShrink: 0,
+    width: 92,
   },
   priceInputWrap: {
     alignItems: 'center',
     borderBottomColor: Colors.borderStrong,
     borderBottomWidth: 1,
     flexDirection: 'row',
-    minWidth: 82,
-  },
-  priceInputWrapCompact: {
-    alignSelf: 'stretch',
     width: '100%',
   },
+  currencySymbol: { flexShrink: 0 },
   priceInput: {
     color: Colors.charcoal,
     flex: 1,
     fontSize: 17,
     fontWeight: '600',
+    minWidth: 0,
     minHeight: 36,
     paddingHorizontal: 4,
     paddingVertical: 2,
     textAlign: 'right',
   },
-  priceCaptionCompact: { textAlign: 'right' },
+  priceCaption: { maxWidth: '100%', textAlign: 'right' },
   footer: {
     alignItems: 'center',
     backgroundColor: Colors.canvas,
