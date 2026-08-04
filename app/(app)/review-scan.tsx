@@ -588,9 +588,15 @@ export default function ReviewScanScreen() {
                           </AppText>
                         </View>
                         <View style={[styles.confidence, needsReview && styles.confidenceReview]}>
-                          <AppText tone={needsReview ? 'default' : 'accent'} variant="overline">
+                          <AppText
+                            adjustsFontSizeToFit
+                            minimumFontScale={0.8}
+                            numberOfLines={1}
+                            style={hasSuggestion ? styles.suggestionBadgeLabel : undefined}
+                            tone={needsReview ? 'default' : 'accent'}
+                            variant="overline">
                             {hasSuggestion
-                              ? 'Suggestion'
+                              ? 'Suggested'
                               : needsReview
                                 ? 'Check'
                                 : `${Math.round(item.confidence * 100)}%`}
@@ -801,6 +807,11 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   confidenceReview: { backgroundColor: Colors.cream },
+  suggestionBadgeLabel: {
+    fontSize: 9,
+    letterSpacing: 0.45,
+    lineHeight: 13,
+  },
   suggestionBox: {
     backgroundColor: Colors.forestSoft,
     borderRadius: Radii.md,
