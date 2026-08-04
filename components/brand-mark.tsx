@@ -1,53 +1,28 @@
-import Feather from '@expo/vector-icons/Feather';
-import { StyleSheet, View } from 'react-native';
+import { Image, StyleSheet } from 'react-native';
 
-import { Colors, Radii } from '@/constants/theme';
+import { Radii } from '@/constants/theme';
 
 type BrandMarkProps = {
   size?: number;
-  inverse?: boolean;
 };
 
-export function BrandMark({ size = 44, inverse = false }: BrandMarkProps) {
+const source = require('@/assets/images/app-icon-option-a.png');
+
+export function BrandMark({ size = 44 }: BrandMarkProps) {
   return (
-    <View
+    <Image
+      accessibilityIgnoresInvertColors
       accessibilityLabel="SariList"
-      style={[
-        styles.mark,
-        {
-          width: size,
-          height: size,
-          borderRadius: size * 0.34,
-          backgroundColor: inverse ? Colors.cream : Colors.forest,
-        },
-      ]}>
-      <Feather color={inverse ? Colors.forest : Colors.cream} name="check" size={size * 0.5} />
-      <View
-        style={[
-          styles.leaf,
-          {
-            backgroundColor: inverse ? Colors.forest : Colors.cream,
-            width: size * 0.19,
-            height: size * 0.29,
-          },
-        ]}
-      />
-    </View>
+      resizeMode="cover"
+      source={source}
+      style={[styles.mark, { height: size, width: size }]}
+    />
   );
 }
 
 const styles = StyleSheet.create({
   mark: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: Radii.md,
     overflow: 'hidden',
-  },
-  leaf: {
-    borderBottomLeftRadius: Radii.pill,
-    borderTopRightRadius: Radii.pill,
-    position: 'absolute',
-    right: '14%',
-    top: '10%',
-    transform: [{ rotate: '12deg' }],
   },
 });
