@@ -2,9 +2,11 @@ import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
+  Easing,
   Image,
   Linking,
   Pressable,
@@ -44,6 +46,20 @@ type SelectedPhoto = {
   mimeType?: string | null;
 };
 
+function getEstimatedProgress(elapsedSeconds: number) {
+  if (elapsedSeconds < 5) return 0.08 + elapsedSeconds * 0.028;
+  if (elapsedSeconds < 15) return 0.22 + (elapsedSeconds - 5) * 0.026;
+  if (elapsedSeconds < 35) return 0.48 + (elapsedSeconds - 15) * 0.014;
+  return Math.min(0.92, 0.76 + (elapsedSeconds - 35) * 0.004);
+}
+
+function getLoadingStage(elapsedSeconds: number) {
+  if (elapsedSeconds < 5) return 'Preparing your photo';
+  if (elapsedSeconds < 15) return 'Finding handwritten lines';
+  if (elapsedSeconds < 35) return 'Reading item names';
+  return 'Checking the results';
+}
+
 export default function ReviewScanScreen() {
   const router = useRouter();
   const { setActiveList } = useShoppingList();
@@ -58,6 +74,11 @@ export default function ReviewScanScreen() {
   const [errorMessage, setErrorMessage] = useState(
     'The photo may be blurry or too dark. Try again with the full note inside the frame.',
   );
+  const [scanElapsedSeconds, setScanElapsedSeconds] = useState(0);
+  const [estimatedProgress, setEstimatedProgress] = useState(0);
+  const [completionItemCount, setCompletionItemCount] = useState<number>();
+  const progressAnimation = useRef(new Animated.Value(0)).current;
+  const scanCompletionStarted = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -98,6 +119,42 @@ export default function ReviewScanScreen() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (status !== 'loading') {
+      progressAnimation.stopAnimation();
+      return;
+    }
+
+    const startedAt = Date.now();
+    scanCompletionStarted.current = false;
+    setScanElapsedSeconds(0);
+    setEstimatedProgress(0.08);
+    setCompletionItemCount(undefined);
+    progressAnimation.setValue(0);
+
+    function updateProgress() {
+      if (scanCompletionStarted.current) return;
+      const elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
+      const nextProgress = getEstimatedProgress(elapsedSeconds);
+      setScanElapsedSeconds(elapsedSeconds);
+      setEstimatedProgress(nextProgress);
+      Animated.timing(progressAnimation, {
+        duration: 450,
+        easing: Easing.out(Easing.cubic),
+        toValue: nextProgress,
+        useNativeDriver: false,
+      }).start();
+    }
+
+    updateProgress();
+    const timer = setInterval(updateProgress, 500);
+
+    return () => {
+      clearInterval(timer);
+      progressAnimation.stopAnimation();
+    };
+  }, [progressAnimation, status]);
 
   function goBack() {
     if (router.canGoBack()) {
@@ -190,9 +247,25 @@ export default function ReviewScanScreen() {
     setPhoto(undefined);
     setStatus('loading');
     setTimeout(() => {
-      setItems(cloneMockItems());
-      setStatus('success');
+      void showCompletedProgress(cloneMockItems()).then(() => setStatus('success'));
     }, 900);
+  }
+
+  function showCompletedProgress(foundItems: ScannedItem[]) {
+    scanCompletionStarted.current = true;
+    setItems(foundItems);
+    setCompletionItemCount(foundItems.length);
+    setEstimatedProgress(1);
+    progressAnimation.stopAnimation();
+
+    return new Promise<void>((resolve) => {
+      Animated.timing(progressAnimation, {
+        duration: 420,
+        easing: Easing.out(Easing.cubic),
+        toValue: 1,
+        useNativeDriver: false,
+      }).start(() => setTimeout(resolve, 350));
+    });
   }
 
   async function reviewSelectedPhoto() {
@@ -203,7 +276,7 @@ export default function ReviewScanScreen() {
 
     try {
       const result = await ocrService.recognize(photo);
-      setItems(result.items);
+      await showCompletedProgress(result.items);
       setStatus('success');
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (error) {
@@ -371,15 +444,65 @@ export default function ReviewScanScreen() {
           {status === 'loading' ? (
             <Surface style={styles.stateCard}>
               <MascotIllustration expression="loading" size={136} style={styles.stateMascot} />
-              <ActivityIndicator color={Colors.forest} size="small" style={styles.loadingIndicator} />
-              <AppText style={styles.centeredText} variant="heading">Reading your list</AppText>
-              <AppText style={styles.stateMessage} tone="muted">
-                Finding item names, quantities, and units…
+              {completionItemCount === undefined ? (
+                <ActivityIndicator color={Colors.forest} size="small" style={styles.loadingIndicator} />
+              ) : (
+                <View style={styles.completionIcon}>
+                  <Feather color={Colors.white} name="check" size={16} />
+                </View>
+              )}
+              <AppText style={styles.centeredText} variant="heading">
+                {completionItemCount === undefined ? 'Reading your list' : 'List ready'}
               </AppText>
-              <View style={styles.skeletonWrap}>
-                <View style={[styles.skeleton, styles.skeletonLong]} />
-                <View style={[styles.skeleton, styles.skeletonMedium]} />
-                <View style={[styles.skeleton, styles.skeletonShort]} />
+              <AppText style={styles.stateMessage} tone="muted">
+                {completionItemCount === undefined
+                  ? 'Finding item names, quantities, and units…'
+                  : 'Opening your results…'}
+              </AppText>
+              <View style={styles.progressWrap}>
+                <View style={styles.progressLabels}>
+                  <AppText tone="accent" variant="label">
+                    {completionItemCount === undefined
+                      ? getLoadingStage(scanElapsedSeconds)
+                      : `${completionItemCount} ${completionItemCount === 1 ? 'item' : 'items'} found`}
+                  </AppText>
+                  <AppText tone="muted" variant="caption">
+                    {completionItemCount === undefined
+                      ? `About ${Math.round(estimatedProgress * 100)}%`
+                      : '100%'}
+                  </AppText>
+                </View>
+                <View
+                  accessibilityLabel="Estimated scan progress"
+                  accessibilityRole="progressbar"
+                  accessibilityValue={{
+                    max: 100,
+                    min: 0,
+                    now: Math.round(estimatedProgress * 100),
+                    text: `${getLoadingStage(scanElapsedSeconds)}, ${scanElapsedSeconds} seconds elapsed`,
+                  }}
+                  style={styles.progressTrack}>
+                  <Animated.View
+                    style={[
+                      styles.progressFill,
+                      {
+                        width: progressAnimation.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0%', '100%'],
+                        }),
+                      },
+                    ]}
+                  />
+                </View>
+                <AppText style={styles.elapsedText} tone="subtle" variant="caption">
+                  {scanElapsedSeconds < 60
+                    ? completionItemCount === undefined
+                      ? `${scanElapsedSeconds}s elapsed · Usually under a minute`
+                      : 'Scan complete'
+                    : completionItemCount === undefined
+                      ? `${scanElapsedSeconds}s elapsed · Still working on the handwriting`
+                      : 'Scan complete'}
+                </AppText>
               </View>
             </Surface>
           ) : null}
@@ -556,6 +679,16 @@ const styles = StyleSheet.create({
     marginBottom: Spacing[3],
     marginTop: -Spacing[3],
   },
+  completionIcon: {
+    alignItems: 'center',
+    backgroundColor: Colors.forest,
+    borderRadius: Radii.pill,
+    height: 28,
+    justifyContent: 'center',
+    marginBottom: Spacing[3],
+    marginTop: -Spacing[3],
+    width: 28,
+  },
   centeredText: { textAlign: 'center' },
   stateMessage: { marginTop: Spacing[2], maxWidth: 300, textAlign: 'center' },
   stateButton: { marginTop: Spacing[6], minWidth: 210 },
@@ -563,11 +696,25 @@ const styles = StyleSheet.create({
   secondaryStateButton: { marginTop: Spacing[1], minWidth: 210 },
   sampleLink: { marginTop: Spacing[4] },
   privacyNote: { marginTop: Spacing[4], textAlign: 'center' },
-  skeletonWrap: { alignSelf: 'stretch', gap: Spacing[3], marginTop: Spacing[7] },
-  skeleton: { backgroundColor: Colors.border, borderRadius: Radii.pill, height: 12 },
-  skeletonLong: { width: '100%' },
-  skeletonMedium: { width: '82%' },
-  skeletonShort: { width: '58%' },
+  progressWrap: { alignSelf: 'stretch', marginTop: Spacing[7] },
+  progressLabels: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: Spacing[2],
+  },
+  progressTrack: {
+    backgroundColor: Colors.border,
+    borderRadius: Radii.pill,
+    height: 10,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    backgroundColor: Colors.forest,
+    borderRadius: Radii.pill,
+    height: '100%',
+  },
+  elapsedText: { marginTop: Spacing[2], textAlign: 'center' },
   errorCard: { borderColor: '#E7CFC9' },
   successBanner: {
     alignItems: 'center',
